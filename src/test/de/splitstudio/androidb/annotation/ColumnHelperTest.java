@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import de.splitstudio.androidb.Table;
 import de.splitstudio.androidb.TableColumnWithAnnotations;
 import de.splitstudio.androidb.TableMultipleColumns;
 import de.splitstudio.androidb.TableNoColumn;
@@ -33,4 +34,9 @@ public class ColumnHelperTest {
 		assertTrue(ColumnHelper.hasColumns(new TableMultipleColumns()));
 	}
 
+	@Test
+	public void getPrimaryKey_TableWithPrimaryKey_primaryKeyField() throws SecurityException, NoSuchFieldException {
+		Table table = new TableColumnWithAnnotations();
+		assertThat(ColumnHelper.getPrimaryKey(table), equalTo(table.getClass().getField("id")));
+	}
 }

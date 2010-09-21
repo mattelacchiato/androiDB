@@ -48,7 +48,8 @@ public class ColumnHelper {
 
 	public static Field getPrimaryKey(final Table table) {
 		for (Field field : table.getClass().getDeclaredFields()) {
-			if ((field.getAnnotation(Column.class)).primaryKey()) {
+			Column column = field.getAnnotation(Column.class);
+			if (column != null && column.primaryKey()) {
 				return field;
 			}
 		}
