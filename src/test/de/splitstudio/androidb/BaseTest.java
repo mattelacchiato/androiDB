@@ -102,7 +102,8 @@ public class BaseTest {
 		TableColumnWithAnnotations table = new TableColumnWithAnnotations();
 		table.id = 42;
 
-		db.execSQL(String.format("INSERT INTO %s (%s) VALUES (%s)", table.getClass().getSimpleName(), " id", " 42"));
+		db.execSQL(String.format("INSERT INTO %s (%s) VALUES (%s)", table.getClass().getSimpleName(), " id", " "
+				+ "'42'"));
 		EasyMock.expectLastCall();
 		db.execSQL(TableColumnWithAnnotations.SQL);
 		EasyMock.expectLastCall();
@@ -110,5 +111,21 @@ public class BaseTest {
 		replay(mocks);
 		assertTrue(base.insert(table));
 		verify(mocks);
+	}
+
+	@Test
+	public void update_tableWithPrimaryKey_trueAndCorrectSqlExecuted() {
+		TableMultipleColumnsAnnotated table = new TableMultipleColumnsAnnotated();
+		table.id = 42;
+		table.amount = 3.14f;
+		table.text = "foo";
+		db.execSQL("UPDATE TableMultipleColumnsAnnotated SET text='foo', amount='3.14' WHERE id='42'");
+		EasyMock.expectLastCall();
+
+		replay(mocks);
+		boolean result = base.update(table);
+		verify(mocks);
+
+		assertThat(result, is(true));
 	}
 }

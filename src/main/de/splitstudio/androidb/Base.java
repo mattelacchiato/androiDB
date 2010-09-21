@@ -19,6 +19,8 @@ public class Base {
 
 	private static final String DELIMITER = ",";
 
+	private static final String QUOTE = "'";
+
 	private static final Object EQUAL = "=";
 
 	private final SQLiteDatabase db;
@@ -42,7 +44,7 @@ public class Base {
 			for (Field field : table.getClass().getDeclaredFields()) {
 				if (ColumnHelper.isColumn(field)) {
 					columns.append(SPACE).append(field.getName()).append(DELIMITER);
-					values.append(SPACE).append(field.get(table)).append(DELIMITER);
+					values.append(SPACE).append(QUOTE).append(field.get(table)).append(QUOTE).append(DELIMITER);
 				}
 			}
 			trimLastDelimiter(columns);
@@ -60,14 +62,21 @@ public class Base {
 		Field primaryKey = ColumnHelper.getPrimaryKey(table);
 		StringBuilder updateValues = new StringBuilder();
 
-		if (primaryKey == null) {
-			return false;
-		}
 		try {
-			String whereClause = primaryKey.getName() + "=" + primaryKey.get(table);
+			if (primaryKey == null || primaryKey.get(table) == null) {
+				return false;
+			}
+
+			String whereClause = primaryKey.getName() + EQUAL + QUOTE + primaryKey.get(table) + QUOTE;
 			for (Field field : table.getClass().getDeclaredFields()) {
-				if (ColumnHelper.isColumn(field) && field != primaryKey) {
-					updateValues.append(field.getName()).append(EQUAL).append(field.get(table)).append(DELIMITER);
+				if (ColumnHelper.isColumn(field) && !field.equals(primaryKey)) {
+					updateValues.append(field.getName());
+					updateValues.append(EQUAL);
+					updateValues.append(QUOTE);
+					updateValues.append(field.get(table));
+					updateValues.append(QUOTE);
+					updateValues.append(DELIMITER);
+					updateValues.append(SPACE);
 				}
 			}
 			trimLastDelimiter(updateValues);
