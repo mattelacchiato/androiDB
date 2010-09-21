@@ -31,9 +31,9 @@ public class TypeMapper {
 				Column column = ((Column) annotation);
 				if (column.primaryKey()) {
 					constraints += "PRIMARY KEY ";
-					if (column.autoIncrement()) {
-						constraints += "AUTOINCREMENT ";
-					}
+				}
+				if (column.autoIncrement()) {
+					constraints += "AUTOINCREMENT ";
 				}
 				if (column.notNull()) {
 					constraints += "NOT NULL ";

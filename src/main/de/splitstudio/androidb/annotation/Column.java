@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 @Retention(value = RUNTIME)
 public @interface Column {
 
-	boolean notNull() default true;
+	boolean notNull() default false;
 
 	boolean autoIncrement() default false;
 
