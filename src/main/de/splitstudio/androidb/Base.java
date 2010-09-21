@@ -73,9 +73,12 @@ public class Base {
 			if (field.getAnnotation(Column.class) != null) {
 				hasAnnotions = true;
 				try {
-					sqlColumns += fielName + " ";
-					sqlColumns += TypeMapper.getSqlType(field.getType()) + " ";
-					sqlColumns += TypeMapper.getConstraints(field.getAnnotations());
+					String constraints = TypeMapper.getConstraints(field.getAnnotations());
+					sqlColumns += " " + fielName;
+					sqlColumns += " " + TypeMapper.getSqlType(field.getType());
+					if (!constraints.isEmpty()) {
+						sqlColumns += " " + constraints;
+					}
 					sqlColumns += ",";
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -91,7 +94,7 @@ public class Base {
 		//rm last comma TODO: cleaner!
 		//TODO: do versioning in table!
 		sqlColumns = sqlColumns.substring(0, sqlColumns.length() - 1);
-		db.execSQL("CREATE TABLE IF NOT EXISTS " + name + " ( " + sqlColumns + ") ");
+		db.execSQL("CREATE TABLE IF NOT EXISTS " + name + " (" + sqlColumns + ") ");
 		return true;
 	}
 

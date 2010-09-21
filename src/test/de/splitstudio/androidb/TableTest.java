@@ -30,7 +30,7 @@ public class TableTest {
 
 	@Test
 	public void getColumns_returnsAllAnnotatedColumns() {
-		assertThat(base.getColumns(TableSingleColumn.class), equalTo(new String[] { "foo" }));
+		assertThat(base.getColumns(TableColumnWithAnnotations.class), equalTo(new String[] { "id" }));
 	}
 
 	@Test
@@ -46,8 +46,18 @@ public class TableTest {
 	}
 
 	@Test
-	public void createTable_executeCorrectSql() {
-		db.execSQL("CREATE TABLE IF NOT EXISTS TableMultipleColumn ( id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ) ");
+	public void createTable_allAnnotions_executeCorrectSql() {
+		db.execSQL(TableColumnWithAnnotations.SQL);
+		EasyMock.expectLastCall();
+
+		replay(mocks);
+		base.createTable(new TableColumnWithAnnotations());
+		verify(mocks);
+	}
+
+	@Test
+	public void createTable_multipleColumns_executeCorrectSql() {
+		db.execSQL(TableMultipleColumn.SQL);
 		EasyMock.expectLastCall();
 
 		replay(mocks);
@@ -56,13 +66,23 @@ public class TableTest {
 	}
 
 	private class TableMultipleColumn implements Table {
-		@Column(primaryKey = true, autoIncrement = true)
+		public static final String SQL = "CREATE TABLE IF NOT EXISTS TableMultipleColumn ( id INTEGER, text TEXT, amount REAL) ";
+
+		@Column
 		Integer id;
+
+		@Column
+		String text;
+
+		@Column
+		float amount;
 	}
 
-	private class TableSingleColumn implements Table {
-		@Column
-		Integer foo;
+	private class TableColumnWithAnnotations implements Table {
+		public static final String SQL = "CREATE TABLE IF NOT EXISTS TableColumnWithAnnotations ( id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ) ";
+
+		@Column(primaryKey = true, autoIncrement = true, notNull = true)
+		Integer id;
 	}
 
 	private class TableNoColumn implements Table {
