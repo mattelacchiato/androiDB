@@ -7,6 +7,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import de.splitstudio.androidb.annotation.ColumnHelper;
 
+/**
+ * @author mb
+ */
 public class Base {
 
 	public static final String SQL_UPDATE = "UPDATE %s SET %s WHERE %s";
@@ -141,6 +144,21 @@ public class Base {
 			return insert(table);
 		}
 		return update(table);
+	}
+
+	public boolean delete(final Table table) {
+		Field primaryKey = ColumnHelper.getPrimaryKey(table);
+		try {
+			Object value = primaryKey.get(table);
+			if (primaryKey == null || value == null) {
+				return false;
+			}
+			return db.delete(table.getClass().getSimpleName(), String.format("WHERE %s='%s'", primaryKey.getName(),
+				value), null) > 0;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	private StringBuilder trimLastDelimiter(final StringBuilder sb) {

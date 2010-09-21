@@ -128,4 +128,16 @@ public class BaseTest {
 
 		assertThat(result, is(true));
 	}
+
+	@Test
+	public void delete_tableWithPrimaryKey_trueAndCorrectSqlExecuted() {
+		TableColumnWithAnnotations table = new TableColumnWithAnnotations();
+		table.id = 42;
+		EasyMock.expect(db.delete(table.getClass().getSimpleName(), "WHERE id='42'", null)).andReturn(1);
+		replay(mocks);
+		boolean result = base.delete(table);
+		verify(mocks);
+
+		assertThat(result, is(true));
+	}
 }
