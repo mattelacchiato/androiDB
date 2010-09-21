@@ -1,2 +1,2 @@
-=AndroiDB=
+=AndroiDB
 A Lightweight Database Library for Android.
