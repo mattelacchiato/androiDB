@@ -15,7 +15,6 @@ public class TableMultipleColumns implements Table {
 	@Column
 	float amount;
 
-	@Override
 	public boolean isNew() {
 		return id == null;
 	}

@@ -8,7 +8,6 @@ public class TableColumnWithAnnotations implements Table {
 	@Column(primaryKey = true, autoIncrement = true, notNull = true)
 	Integer id;
 
-	@Override
 	public boolean isNew() {
 		return id == null;
 	}

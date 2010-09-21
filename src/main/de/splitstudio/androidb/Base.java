@@ -79,8 +79,8 @@ public class Base {
 					String constraints = TypeMapper.getConstraints(field.getAnnotations());
 					sqlColumns += SPACE + fielName;
 					sqlColumns += SPACE + TypeMapper.getSqlType(field.getType());
-					if (!constraints.isEmpty()) {
 						sqlColumns += SPACE + constraints;
+					if (constraints.length() > 0) {
 					}
 					sqlColumns += DELIMITER;
 				} catch (Exception e) {
