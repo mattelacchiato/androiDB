@@ -1,7 +1,7 @@
 =AndroiDB
 A Lightweight Database Library for Android.
 
-=Usage
+==Usage
 First, lets create a simple Object in our Android App:
   public class Parent implements Table {
       public Parent(final String name, final String nickname){
