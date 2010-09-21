@@ -9,6 +9,8 @@ import de.splitstudio.androidb.annotation.ColumnHelper;
 
 public class Base {
 
+	private static final String SQL_UPDATE = "UPDATE %s SET %s WHERE %s";
+
 	private static final String SQL_INSERT = "INSERT INTO %s (%s) VALUES (%s)";
 
 	private static final String SQL_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS %s (%s)";
@@ -16,6 +18,8 @@ public class Base {
 	private static final String SPACE = " ";
 
 	private static final String DELIMITER = ",";
+
+	private static final Object EQUAL = "=";
 
 	private final SQLiteDatabase db;
 
@@ -25,15 +29,6 @@ public class Base {
 
 	public Base(final Context context, final String databaseName) {
 		db = DatabaseFactory.create(context, databaseName);
-	}
-
-	public Cursor getById(final Table table, final long id) {
-		return getById(table.getClass(), id);
-	}
-
-	public Cursor getById(final Class<? extends Table> klaas, final long id) {
-		return db.query(klaas.getSimpleName(), ColumnHelper.getColumns(klaas), "WHERE id = " + id, null, null, null,
-			null);
 	}
 
 	public boolean insert(final Table table) {
@@ -50,15 +45,33 @@ public class Base {
 					values.append(SPACE).append(field.get(table)).append(DELIMITER);
 				}
 			}
+			trimLastDelimiter(columns);
+			trimLastDelimiter(values);
+			db.execSQL(String.format(SQL_INSERT, table.getClass().getSimpleName(), columns, values));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
-		columns.deleteCharAt(columns.lastIndexOf(DELIMITER));
-		values.deleteCharAt(values.lastIndexOf(DELIMITER));
 
+		return true;
+	}
+
+	public boolean update(final Table table) {
+		Field primaryKey = ColumnHelper.getPrimaryKey(table);
+		StringBuilder updateValues = new StringBuilder();
+
+		if (primaryKey == null) {
+			return false;
+		}
 		try {
-			db.execSQL(String.format(SQL_INSERT, table.getClass().getSimpleName(), columns, values));
+			String whereClause = primaryKey.getName() + "=" + primaryKey.get(table);
+			for (Field field : table.getClass().getDeclaredFields()) {
+				if (ColumnHelper.isColumn(field) && field != primaryKey) {
+					updateValues.append(field.getName()).append(EQUAL).append(field.get(table)).append(DELIMITER);
+				}
+			}
+			trimLastDelimiter(updateValues);
+			db.execSQL(String.format(SQL_UPDATE, table.getClass().getSimpleName(), updateValues, whereClause));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -66,14 +79,15 @@ public class Base {
 		return true;
 	}
 
+	//TODO: do versioning in table!
 	boolean createTable(final Table table) {
 		String name = table.getClass().getSimpleName();
 		StringBuilder sqlColumns = new StringBuilder();
 
-		for (Field field : table.getClass().getDeclaredFields()) {
-			String fielName = field.getName();
-			if (ColumnHelper.isColumn(field)) {
-				try {
+		try {
+			for (Field field : table.getClass().getDeclaredFields()) {
+				String fielName = field.getName();
+				if (ColumnHelper.isColumn(field)) {
 					String constraints = TypeMapper.getConstraints(field.getAnnotations());
 					sqlColumns.append(SPACE).append(fielName);
 					sqlColumns.append(SPACE).append(TypeMapper.getSqlType(field.getType()));
@@ -81,16 +95,14 @@ public class Base {
 						sqlColumns.append(SPACE).append(constraints);
 					}
 					sqlColumns.append(DELIMITER);
-				} catch (Exception e) {
-					e.printStackTrace();
-					return false;
 				}
 			}
+			trimLastDelimiter(sqlColumns);
+			db.execSQL(String.format(SQL_CREATE_TABLE, name, sqlColumns));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
 		}
-
-		//TODO: do versioning in table!
-		sqlColumns.deleteCharAt(sqlColumns.lastIndexOf(DELIMITER));
-		db.execSQL(String.format(SQL_CREATE_TABLE, name, sqlColumns));
 		return true;
 	}
 
@@ -113,16 +125,15 @@ public class Base {
 		return true;
 	}
 
-	public boolean fillById(final Table table, final long id) {
-		return fill(table, getById(table, id));
-	}
-
 	public boolean save(final Table table) {
 		if (table.isNew()) {
 			return insert(table);
 		}
-		/*TODO: update!*/
-		return false;
+		return update(table);
+	}
+
+	private StringBuilder trimLastDelimiter(final StringBuilder sb) {
+		return sb.delete(sb.lastIndexOf(DELIMITER), sb.length());
 	}
 
 }
