@@ -8,7 +8,6 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import de.splitstudio.androidb.Table;
 import de.splitstudio.androidb.TableColumnWithAnnotations;
 import de.splitstudio.androidb.TableMultipleColumns;
 import de.splitstudio.androidb.TableNoColumn;
@@ -27,23 +26,22 @@ public class ColumnHelperTest {
 
 	@Test
 	public void hasColumns_TableWithoutColumn_false() {
-		assertFalse(ColumnHelper.hasColumns(new TableNoColumn()));
+		assertFalse(ColumnHelper.hasColumns(TableNoColumn.class));
 	}
 
 	@Test
 	public void hasColumns_TableWithColumns_true() {
-		assertTrue(ColumnHelper.hasColumns(new TableMultipleColumns()));
+		assertTrue(ColumnHelper.hasColumns(TableMultipleColumns.class));
 	}
 
 	@Test
 	public void getPrimaryKey_TableWithPrimaryKey_primaryKeyField() throws SecurityException, NoSuchFieldException {
-		Table table = new TableColumnWithAnnotations();
-		assertThat(ColumnHelper.getPrimaryKey(table), equalTo(table.getClass().getField("id")));
+		assertThat(ColumnHelper.getPrimaryKey(TableColumnWithAnnotations.class),
+			equalTo(TableColumnWithAnnotations.class.getField("id")));
 	}
 
 	@Test
 	public void getPrimaryKey_TableWithoutPrimaryKey_null() throws SecurityException, NoSuchFieldException {
-		Table table = new TableNoColumn();
-		assertNull(ColumnHelper.getPrimaryKey(table));
+		assertNull(ColumnHelper.getPrimaryKey(TableNoColumn.class));
 	}
 }

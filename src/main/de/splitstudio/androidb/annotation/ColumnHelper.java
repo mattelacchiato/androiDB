@@ -46,14 +46,18 @@ public class ColumnHelper {
 		return hasColumns(table.getClass());
 	}
 
-	public static Field getPrimaryKey(final Table table) {
-		for (Field field : table.getClass().getDeclaredFields()) {
+	public static Field getPrimaryKey(final Class<? extends Table> klaas) {
+		for (Field field : klaas.getDeclaredFields()) {
 			Column column = field.getAnnotation(Column.class);
 			if (column != null && column.primaryKey()) {
 				return field;
 			}
 		}
 		return null;
+	}
+
+	public static Field getPrimaryKey(final Table table) {
+		return getPrimaryKey(table.getClass());
 	}
 
 	public static StringBuilder getConstraints(final Field field) {

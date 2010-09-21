@@ -39,7 +39,8 @@ public class BaseTest {
 		EasyMock.expectLastCall();
 
 		replay(mocks);
-		base.createTable(new TableColumnWithAnnotations());
+		TableColumnWithAnnotations table = new TableColumnWithAnnotations(db);
+		table.createTable();
 		verify(mocks);
 	}
 
@@ -49,7 +50,8 @@ public class BaseTest {
 		EasyMock.expectLastCall();
 
 		replay(mocks);
-		base.createTable(new TableMultipleColumns());
+		TableMultipleColumns table = new TableMultipleColumns(db);
+		table.createTable();
 		verify(mocks);
 	}
 
@@ -58,7 +60,8 @@ public class BaseTest {
 		EasyMock.expect(cursor.getCount()).andReturn(0);
 
 		replay(mocks);
-		boolean result = base.fill(new TableMultipleColumns(), cursor);
+		TableMultipleColumns table = new TableMultipleColumns(db);
+		boolean result = table.fill(cursor);
 		verify(mocks);
 
 		assertFalse(result);
@@ -69,7 +72,8 @@ public class BaseTest {
 		EasyMock.expect(cursor.getCount()).andReturn(2);
 
 		replay(mocks);
-		boolean result = base.fill(new TableMultipleColumns(), cursor);
+		TableMultipleColumns table = new TableMultipleColumns(db);
+		boolean result = table.fill(cursor);
 		verify(mocks);
 
 		assertFalse(result);
@@ -77,13 +81,13 @@ public class BaseTest {
 
 	@Test
 	public void fill_oneRowCursor_trueAndFilled() {
-		TableColumnWithAnnotations table = new TableColumnWithAnnotations();
+		TableColumnWithAnnotations table = new TableColumnWithAnnotations(db);
 		EasyMock.expect(cursor.getCount()).andReturn(1);
 		EasyMock.expect(cursor.getColumnIndex("id")).andReturn(0);
 		EasyMock.expect(cursor.getInt(0)).andReturn(42);
 
 		replay(mocks);
-		boolean result = base.fill(table, cursor);
+		boolean result = table.fill(cursor);
 		verify(mocks);
 
 		assertTrue(result);
@@ -93,13 +97,14 @@ public class BaseTest {
 	@Test
 	public void insert_tableWithoutColumns_false() {
 		replay(mocks);
-		assertFalse(base.insert(new TableNoColumn()));
+		TableNoColumn table = new TableNoColumn(db);
+		assertFalse(table.insert());
 		verify(mocks);
 	}
 
 	@Test
 	public void insert_tableWithColumns_trueAndCorrectSqlExecuted() {
-		TableColumnWithAnnotations table = new TableColumnWithAnnotations();
+		TableColumnWithAnnotations table = new TableColumnWithAnnotations(db);
 		table.id = 42;
 
 		db.execSQL(String.format("INSERT INTO %s (%s) VALUES (%s)", table.getClass().getSimpleName(), " id", " "
@@ -109,13 +114,13 @@ public class BaseTest {
 		EasyMock.expectLastCall();
 
 		replay(mocks);
-		assertTrue(base.insert(table));
+		assertTrue(table.insert());
 		verify(mocks);
 	}
 
 	@Test
 	public void update_tableWithPrimaryKey_trueAndCorrectSqlExecuted() {
-		TableMultipleColumnsAnnotated table = new TableMultipleColumnsAnnotated();
+		TableMultipleColumnsAnnotated table = new TableMultipleColumnsAnnotated(db);
 		table.id = 42;
 		table.amount = 3.14f;
 		table.text = "foo";
@@ -123,7 +128,7 @@ public class BaseTest {
 		EasyMock.expectLastCall();
 
 		replay(mocks);
-		boolean result = base.update(table);
+		boolean result = table.update();
 		verify(mocks);
 
 		assertThat(result, is(true));
@@ -131,11 +136,11 @@ public class BaseTest {
 
 	@Test
 	public void delete_tableWithPrimaryKey_trueAndCorrectSqlExecuted() {
-		TableColumnWithAnnotations table = new TableColumnWithAnnotations();
+		TableColumnWithAnnotations table = new TableColumnWithAnnotations(db);
 		table.id = 42;
 		EasyMock.expect(db.delete(table.getClass().getSimpleName(), "WHERE id='42'", null)).andReturn(1);
 		replay(mocks);
-		boolean result = base.delete(table);
+		boolean result = table.delete();
 		verify(mocks);
 
 		assertThat(result, is(true));

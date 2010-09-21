@@ -1,8 +1,15 @@
 package de.splitstudio.androidb;
 
-public class TableNoColumn implements Table {
+import android.database.sqlite.SQLiteDatabase;
+
+public class TableNoColumn extends Table {
+	public TableNoColumn(final SQLiteDatabase db) {
+		super(db);
+	}
+
 	Integer foo;
 
+	@Override
 	public boolean isNew() {
 		return true;
 	}
