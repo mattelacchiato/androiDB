@@ -16,15 +16,9 @@ public class DatabaseFactory extends SQLiteOpenHelper {
 	}
 
 	@Override
-	public void onCreate(final SQLiteDatabase db) {
-	// TODO Auto-generated method stub
-
-	}
+	public void onCreate(final SQLiteDatabase db) {}
 
 	@Override
-	public void onUpgrade(final SQLiteDatabase db, final int oldVersion, final int newVersion) {
-	// TODO Auto-generated method stub
-
-	}
+	public void onUpgrade(final SQLiteDatabase db, final int oldVersion, final int newVersion) {}
 
 }

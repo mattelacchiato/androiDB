@@ -10,6 +10,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import de.splitstudio.androidb.annotation.Column;
+import de.splitstudio.androidb.annotation.ColumnHelper;
 
 public class Base {
 
@@ -72,7 +73,7 @@ public class Base {
 
 		for (Field field : table.getClass().getDeclaredFields()) {
 			String fielName = field.getName();
-			if (field.getAnnotation(Column.class) != null) {
+			if (ColumnHelper.isColumn(field)) {
 				hasAnnotions = true;
 				try {
 					String constraints = TypeMapper.getConstraints(field.getAnnotations());
@@ -106,8 +107,9 @@ public class Base {
 
 		try {
 			for (Field field : table.getClass().getDeclaredFields()) {
-				Object value = CursorHelper.getTypedValue(c, field);
-				field.set(this, value);
+				if (ColumnHelper.isColumn(field)) {
+					TypeMapper.setTypedValue(c, table, field);
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -125,7 +127,7 @@ public class Base {
 		return false;
 	}
 
-	public String[] getColumns(final Class<? extends Table> klaas) {
+	public List<String> getColumnsAsList(final Class<? extends Table> klaas) {
 		Field[] fields = klaas.getDeclaredFields();
 		ArrayList<String> columns = new ArrayList<String>(fields.length);
 		for (int i = 0; i < fields.length; ++i) {
@@ -133,6 +135,11 @@ public class Base {
 				columns.add(fields[i].getName());
 			}
 		}
+		return columns;
+	}
+
+	public String[] getColumns(final Class<? extends Table> klaas) {
+		List<String> columns = getColumnsAsList(klaas);
 		return columns.toArray(new String[columns.size()]);
 	}
 
