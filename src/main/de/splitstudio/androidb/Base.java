@@ -66,10 +66,12 @@ public class Base {
 	public boolean createTable(final Table table) {
 		String name = table.getClass().getSimpleName();
 		String sqlColumns = "";
+		boolean hasAnnotions = false;
 
 		for (Field field : table.getClass().getDeclaredFields()) {
 			String fielName = field.getName();
 			if (field.getAnnotation(Column.class) != null) {
+				hasAnnotions = true;
 				try {
 					sqlColumns += fielName + " ";
 					sqlColumns += TypeMapper.getSqlType(field.getType()) + " ";
@@ -81,6 +83,11 @@ public class Base {
 				}
 			}
 		}
+
+		if (!hasAnnotions) {
+			throw new IllegalArgumentException("Table " + name + " has no Annotions!");
+		}
+
 		//rm last comma TODO: cleaner!
 		//TODO: do versioning in table!
 		sqlColumns = sqlColumns.substring(0, sqlColumns.length() - 1);

@@ -38,6 +38,13 @@ public class TableTest {
 		assertThat(base.getColumns(TableNoColumn.class), equalTo(new String[] {}));
 	}
 
+	@Test(expected = IllegalArgumentException.class)
+	public void createTable_noColumn_throwsException() {
+		replay(mocks);
+		base.createTable(new TableNoColumn());
+		verify(mocks);
+	}
+
 	@Test
 	public void createTable_executeCorrectSql() {
 		db.execSQL("CREATE TABLE IF NOT EXISTS TableMultipleColumn ( id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ) ");
