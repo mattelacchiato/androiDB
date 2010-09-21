@@ -91,7 +91,7 @@ public class BaseTest {
 		verify(mocks);
 
 		assertTrue(result);
-		assertThat(table.id, is(42));
+		assertThat(table.getId(), is(42));
 	}
 
 	@Test
@@ -105,7 +105,7 @@ public class BaseTest {
 	@Test
 	public void insert_tableWithColumns_trueAndCorrectSqlExecuted() {
 		TableColumnWithAnnotations table = new TableColumnWithAnnotations(db);
-		table.id = 42;
+		table.setId(42);
 
 		db.execSQL(String.format("INSERT INTO %s (%s) VALUES (%s)", table.getClass().getSimpleName(), " id", " "
 				+ "'42'"));
@@ -137,7 +137,7 @@ public class BaseTest {
 	@Test
 	public void delete_tableWithPrimaryKey_trueAndCorrectSqlExecuted() {
 		TableColumnWithAnnotations table = new TableColumnWithAnnotations(db);
-		table.id = 42;
+		table.setId(42);
 		EasyMock.expect(db.delete(table.getClass().getSimpleName(), "WHERE id='42'", null)).andReturn(1);
 		replay(mocks);
 		boolean result = table.delete();

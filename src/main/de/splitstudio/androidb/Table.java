@@ -20,7 +20,7 @@ public abstract class Table {
 
 	public static final String QUOTE = "'";
 
-	public static final Object EQUAL = "=";
+	public static final String EQUAL = "=";
 
 	private final SQLiteDatabase db;
 
@@ -58,7 +58,7 @@ public abstract class Table {
 		try {
 			for (Field field : this.getClass().getDeclaredFields()) {
 				if (ColumnHelper.isColumn(field)) {
-					TypeMapper.setTypedValue(c, this, field);
+					setTypedValue(c, field);
 				}
 			}
 		} catch (Exception e) {
@@ -177,6 +177,30 @@ public abstract class Table {
 
 	private StringBuilder trimLastDelimiter(final StringBuilder sb) {
 		return sb.delete(sb.lastIndexOf(DELIMITER), sb.length());
+	}
+
+	private void setTypedValue(final Cursor c, final Field field) throws IllegalArgumentException,
+			IllegalAccessException {
+		int index = c.getColumnIndex(field.getName());
+		Class<?> type = field.getType();
+
+		if (type.equals(long.class) || type.equals(Long.class)) {
+			field.set(this, c.getLong(index));
+		} else if (type.equals(int.class) || type.equals(Integer.class)) {
+			field.set(this, c.getInt(index));
+		} else if (type.equals(short.class) || type.equals(Short.class)) {
+			field.set(this, c.getShort(index));
+		} else if (type.equals(byte.class) || type.equals(Byte.class)) {
+			field.set(this, (byte) c.getShort(index));
+		} else if (type.equals(double.class) || type.equals(Double.class)) {
+			field.set(this, c.getDouble(index));
+		} else if (type.equals(float.class) || type.equals(Float.class)) {
+			field.set(this, c.getFloat(index));
+		} else if (type.equals(char.class)) {
+			field.set(this, (char) c.getShort(index));
+		} else if (type.equals(String.class)) {
+			field.set(this, c.getString(index));
+		}
 	}
 
 }

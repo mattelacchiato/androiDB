@@ -1,8 +1,5 @@
 package de.splitstudio.androidb;
 
-import java.lang.reflect.Field;
-
-import android.database.Cursor;
 
 public class TypeMapper {
 
@@ -34,42 +31,6 @@ public class TypeMapper {
 		}
 
 		return BLOB;
-	}
-
-	public static void setTypedValue(final Cursor c, final Object obj, final Field field)
-			throws IllegalArgumentException, IllegalAccessException {
-		int index = c.getColumnIndex(field.getName());
-		Class<?> type = field.getType();
-
-		if (type.equals(long.class)) {
-			field.setLong(obj, c.getLong(index));
-		} else if (type.equals(Long.class)) {
-			field.set(obj, c.getLong(index));
-		} else if (type.equals(int.class)) {
-			field.setInt(obj, c.getInt(index));
-		} else if (type.equals(Integer.class)) {
-			field.set(obj, c.getInt(index));
-		} else if (type.equals(short.class)) {
-			field.setShort(obj, c.getShort(index));
-		} else if (type.equals(Short.class)) {
-			field.set(obj, c.getShort(index));
-		} else if (type.equals(byte.class)) {
-			field.setByte(obj, (byte) c.getShort(index));
-		} else if (type.equals(Byte.class)) {
-			field.set(obj, (byte) c.getShort(index));
-		} else if (type.equals(double.class)) {
-			field.setDouble(obj, c.getDouble(index));
-		} else if (type.equals(Double.class)) {
-			field.set(obj, c.getDouble(index));
-		} else if (type.equals(float.class)) {
-			field.setFloat(obj, c.getFloat(index));
-		} else if (type.equals(Float.class)) {
-			field.set(obj, c.getFloat(index));
-		} else if (type.equals(char.class)) {
-			field.setChar(obj, (char) c.getShort(index));
-		} else if (type.equals(String.class)) {
-			field.set(obj, c.getString(index));
-		}
 	}
 
 }

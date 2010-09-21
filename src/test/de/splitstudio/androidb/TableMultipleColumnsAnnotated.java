@@ -13,16 +13,17 @@ public class TableMultipleColumnsAnnotated extends Table {
 			+ " ( id INTEGER PRIMARY KEY, text TEXT, amount REAL)";
 
 	@Column(primaryKey = true)
-	Integer id;
+	protected Integer id;
 
 	@Column
-	String text;
+	protected String text;
 
 	@Column
-	float amount;
+	protected float amount;
 
 	@Override
 	public boolean isNew() {
 		return id == null;
 	}
+
 }

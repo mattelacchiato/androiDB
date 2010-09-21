@@ -7,10 +7,11 @@ public class TableNoColumn extends Table {
 		super(db);
 	}
 
-	Integer foo;
+	protected Integer foo;
 
 	@Override
 	public boolean isNew() {
 		return true;
 	}
+
 }

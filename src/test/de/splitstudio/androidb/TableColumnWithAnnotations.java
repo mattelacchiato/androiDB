@@ -12,10 +12,19 @@ public class TableColumnWithAnnotations extends Table {
 	}
 
 	@Column(primaryKey = true, autoIncrement = true, notNull = true)
-	public Integer id;
+	protected Integer id;
 
 	@Override
 	public boolean isNew() {
 		return id == null;
 	}
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(final Integer id) {
+		this.id = id;
+	}
+
 }
