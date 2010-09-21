@@ -9,9 +9,11 @@ import de.splitstudio.androidb.annotation.ColumnHelper;
 
 public class Base {
 
-	private static final char DELIMITER = ',';
+	private static final String EMPTY_STRING = "";
 
-	private static final Long ERR_FAIL = new Long(-1);
+	private static final String SPACE = " ";
+
+	private static final char DELIMITER = ',';
 
 	private final SQLiteDatabase db;
 
@@ -33,8 +35,8 @@ public class Base {
 	}
 
 	public boolean insert(final Table table) {
-		String columns = "";
-		String values = "";
+		String columns = EMPTY_STRING;
+		String values = EMPTY_STRING;
 		if (!ColumnHelper.hasColumns(table) || !createTable(table)) {
 			return false;
 		}
@@ -42,8 +44,8 @@ public class Base {
 		try {
 			for (Field field : table.getClass().getDeclaredFields()) {
 				if (ColumnHelper.isColumn(field)) {
-					columns += " " + field.getName() + DELIMITER;
-					values += " " + field.get(table) + DELIMITER;
+					columns += SPACE + field.getName() + DELIMITER;
+					values += SPACE + field.get(table) + DELIMITER;
 				}
 			}
 		} catch (Exception e) {
@@ -65,17 +67,17 @@ public class Base {
 
 	boolean createTable(final Table table) {
 		String name = table.getClass().getSimpleName();
-		String sqlColumns = "";
+		String sqlColumns = EMPTY_STRING;
 
 		for (Field field : table.getClass().getDeclaredFields()) {
 			String fielName = field.getName();
 			if (ColumnHelper.isColumn(field)) {
 				try {
 					String constraints = TypeMapper.getConstraints(field.getAnnotations());
-					sqlColumns += " " + fielName;
-					sqlColumns += " " + TypeMapper.getSqlType(field.getType());
+					sqlColumns += SPACE + fielName;
+					sqlColumns += SPACE + TypeMapper.getSqlType(field.getType());
 					if (!constraints.isEmpty()) {
-						sqlColumns += " " + constraints;
+						sqlColumns += SPACE + constraints;
 					}
 					sqlColumns += DELIMITER;
 				} catch (Exception e) {

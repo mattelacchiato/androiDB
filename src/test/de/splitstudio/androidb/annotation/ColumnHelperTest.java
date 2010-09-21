@@ -29,7 +29,7 @@ public class ColumnHelperTest {
 	}
 
 	@Test
-	public void hasColumns_TableColumn_true() {
+	public void hasColumns_TableWithColumns_true() {
 		assertTrue(ColumnHelper.hasColumns(new TableMultipleColumns()));
 	}
 

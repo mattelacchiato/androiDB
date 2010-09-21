@@ -90,4 +90,25 @@ public class BaseTest {
 		assertThat(table.id, is(42));
 	}
 
+	@Test
+	public void insert_tableWithoutColumns_false() {
+		replay(mocks);
+		assertFalse(base.insert(new TableNoColumn()));
+		verify(mocks);
+	}
+
+	@Test
+	public void insert_tableWithColumns_trueAndCorrectSqlExecuted() {
+		TableColumnWithAnnotations table = new TableColumnWithAnnotations();
+		table.id = 42;
+
+		db.execSQL(String.format("INSERT INTO %s (%s) VALUES (%s)", table.getClass().getSimpleName(), " id", " 42"));
+		EasyMock.expectLastCall();
+		db.execSQL(TableColumnWithAnnotations.SQL);
+		EasyMock.expectLastCall();
+
+		replay(mocks);
+		assertTrue(base.insert(table));
+		verify(mocks);
+	}
 }

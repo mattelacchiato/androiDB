@@ -32,13 +32,18 @@ public class ColumnHelper {
 		return getColumns(table.getClass());
 	}
 
-	public static boolean hasColumns(final Table table) {
-		for (Field field : table.getClass().getDeclaredFields()) {
-			if (!isColumn(field)) {
-				return false;
+	public static boolean hasColumns(final Class<? extends Table> klaas) {
+		for (Field field : klaas.getDeclaredFields()) {
+			if (isColumn(field)) {
+				return true;
 			}
 		}
-		return true;
+		return false;
+
+	}
+
+	public static boolean hasColumns(final Table table) {
+		return hasColumns(table.getClass());
 	}
 
 }
