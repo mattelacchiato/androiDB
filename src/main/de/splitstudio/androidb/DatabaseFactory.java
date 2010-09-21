@@ -7,8 +7,10 @@ import android.database.sqlite.SQLiteDatabase.CursorFactory;
 
 public class DatabaseFactory extends SQLiteOpenHelper {
 
+	private static final int INITIAL_VERSION = 1;
+
 	public static SQLiteDatabase create(final Context context, final String name) {
-		return new DatabaseFactory(context, name, null, 0).getWritableDatabase();
+		return new DatabaseFactory(context, name, null, INITIAL_VERSION).getWritableDatabase();
 	}
 
 	private DatabaseFactory(final Context context, final String name, final CursorFactory factory, final int version) {
