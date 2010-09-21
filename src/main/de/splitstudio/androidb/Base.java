@@ -63,7 +63,6 @@ public class Base {
 		return db.insert(table.getClass().getSimpleName(), null, values);
 	}
 
-	//TODO add annotations
 	public boolean createTable(final Table table) {
 		String name = table.getClass().getSimpleName();
 		String sqlColumns = "";
@@ -71,20 +70,21 @@ public class Base {
 		for (Field field : table.getClass().getDeclaredFields()) {
 			String fielName = field.getName();
 			if (field.getAnnotation(Column.class) != null) {
-				sqlColumns += fielName + " ";
 				try {
-					sqlColumns += TypeMapper.getSqlType(field.get(table));
+					sqlColumns += fielName + " ";
+					sqlColumns += TypeMapper.getSqlType(field.getType()) + " ";
+					sqlColumns += TypeMapper.getConstraints(field.getAnnotations());
+					sqlColumns += ",";
 				} catch (Exception e) {
 					e.printStackTrace();
 					return false;
 				}
-				sqlColumns += ",";
 			}
 		}
 		//rm last comma TODO: cleaner!
 		//TODO: do versioning in table!
 		sqlColumns = sqlColumns.substring(0, sqlColumns.length() - 1);
-		db.execSQL("CREATE TABLE IF NOT EXISTS " + name + " ( " + sqlColumns + " ) ");
+		db.execSQL("CREATE TABLE IF NOT EXISTS " + name + " ( " + sqlColumns + ") ");
 		return true;
 	}
 
