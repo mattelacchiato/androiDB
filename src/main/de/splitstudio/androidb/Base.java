@@ -1,7 +1,6 @@
 package de.splitstudio.androidb;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,7 +8,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import de.splitstudio.androidb.annotation.Column;
 import de.splitstudio.androidb.annotation.ColumnHelper;
 
 public class Base {
@@ -100,7 +98,7 @@ public class Base {
 		return true;
 	}
 
-	public boolean fill(final Cursor c, final Table table) {
+	public boolean fill(final Table table, final Cursor c) {
 		if (c.getCount() != 1) {
 			return false;
 		}
@@ -119,32 +117,16 @@ public class Base {
 		return true;
 	}
 
+	public boolean fillById(final Table table, final long id) {
+		return fill(table, getById(table, id));
+	}
+
 	public boolean save(final Table table) {
 		if (table.isNew()) {
 			return insert(table) > 0;
 		}
 		/*TODO: update!*/
 		return false;
-	}
-
-	public List<String> getColumnsAsList(final Class<? extends Table> klaas) {
-		Field[] fields = klaas.getDeclaredFields();
-		ArrayList<String> columns = new ArrayList<String>(fields.length);
-		for (int i = 0; i < fields.length; ++i) {
-			if (fields[i].isAnnotationPresent(Column.class)) {
-				columns.add(fields[i].getName());
-			}
-		}
-		return columns;
-	}
-
-	public String[] getColumns(final Class<? extends Table> klaas) {
-		List<String> columns = getColumnsAsList(klaas);
-		return columns.toArray(new String[columns.size()]);
-	}
-
-	public String[] getColumns(final Table table) {
-		return getColumns(table.getClass());
 	}
 
 }

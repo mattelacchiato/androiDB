@@ -4,7 +4,6 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -15,7 +14,6 @@ import org.junit.Test;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import de.splitstudio.androidb.annotation.Column;
 
 public class BaseTest {
 
@@ -33,16 +31,6 @@ public class BaseTest {
 		cursor = createMock(Cursor.class);
 		base = new Base(db);
 		mocks = new Object[] { db, cursor };
-	}
-
-	@Test
-	public void getColumns_returnsAllAnnotatedColumns() {
-		assertThat(base.getColumns(TableColumnWithAnnotations.class), equalTo(new String[] { "id" }));
-	}
-
-	@Test
-	public void getColumns_noAnnotatedField_emptyArray() {
-		assertThat(base.getColumns(TableNoColumn.class), equalTo(new String[] {}));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -64,11 +52,11 @@ public class BaseTest {
 
 	@Test
 	public void createTable_multipleColumns_executeCorrectSql() {
-		db.execSQL(TableMultipleColumn.SQL);
+		db.execSQL(TableMultipleColumns.SQL);
 		EasyMock.expectLastCall();
 
 		replay(mocks);
-		base.createTable(new TableMultipleColumn());
+		base.createTable(new TableMultipleColumns());
 		verify(mocks);
 	}
 
@@ -77,7 +65,7 @@ public class BaseTest {
 		EasyMock.expect(cursor.getCount()).andReturn(0);
 
 		replay(mocks);
-		boolean result = base.fill(cursor, new TableMultipleColumn());
+		boolean result = base.fill(new TableMultipleColumns(), cursor);
 		verify(mocks);
 
 		assertFalse(result);
@@ -88,7 +76,7 @@ public class BaseTest {
 		EasyMock.expect(cursor.getCount()).andReturn(2);
 
 		replay(mocks);
-		boolean result = base.fill(cursor, new TableMultipleColumn());
+		boolean result = base.fill(new TableMultipleColumns(), cursor);
 		verify(mocks);
 
 		assertFalse(result);
@@ -102,49 +90,11 @@ public class BaseTest {
 		EasyMock.expect(cursor.getInt(0)).andReturn(42);
 
 		replay(mocks);
-		boolean result = base.fill(cursor, table);
+		boolean result = base.fill(table, cursor);
 		verify(mocks);
 
 		assertTrue(result);
 		assertThat(table.id, is(42));
 	}
 
-	private class TableMultipleColumn implements Table {
-		public static final String SQL = "CREATE TABLE IF NOT EXISTS TableMultipleColumn ( id INTEGER, text TEXT, amount REAL)";
-
-		@Column
-		Integer id;
-
-		@Column
-		String text;
-
-		@Column
-		float amount;
-
-		@Override
-		public boolean isNew() {
-			return id == null;
-		}
-	}
-
-	private class TableColumnWithAnnotations implements Table {
-		public static final String SQL = "CREATE TABLE IF NOT EXISTS TableColumnWithAnnotations ( id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL )";
-
-		@Column(primaryKey = true, autoIncrement = true, notNull = true)
-		Integer id;
-
-		@Override
-		public boolean isNew() {
-			return id == null;
-		}
-	}
-
-	private class TableNoColumn implements Table {
-		Integer foo;
-
-		@Override
-		public boolean isNew() {
-			return true;
-		}
-	}
 }
