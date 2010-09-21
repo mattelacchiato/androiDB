@@ -13,6 +13,8 @@ import de.splitstudio.androidb.annotation.Column;
 
 public class Base {
 
+	private static final char DELIMITER = ',';
+
 	private static final Long ERR_FAIL = new Long(-1);
 
 	private final SQLiteDatabase db;
@@ -79,7 +81,7 @@ public class Base {
 					if (!constraints.isEmpty()) {
 						sqlColumns += " " + constraints;
 					}
-					sqlColumns += ",";
+					sqlColumns += DELIMITER;
 				} catch (Exception e) {
 					e.printStackTrace();
 					return false;
@@ -91,10 +93,9 @@ public class Base {
 			throw new IllegalArgumentException("Table " + name + " has no Annotions!");
 		}
 
-		//rm last comma TODO: cleaner!
 		//TODO: do versioning in table!
-		sqlColumns = sqlColumns.substring(0, sqlColumns.length() - 1);
-		db.execSQL("CREATE TABLE IF NOT EXISTS " + name + " (" + sqlColumns + ") ");
+		sqlColumns = sqlColumns.substring(0, sqlColumns.lastIndexOf(DELIMITER));
+		db.execSQL("CREATE TABLE IF NOT EXISTS " + name + " (" + sqlColumns + ")");
 		return true;
 	}
 
@@ -116,9 +117,12 @@ public class Base {
 		return true;
 	}
 
-	/*TODO: update OR insert logic*/
 	public boolean save(final Table table) {
-		return insert(table) > 0;
+		if (table.isNew()) {
+			return insert(table) > 0;
+		}
+		/*TODO: update!*/
+		return false;
 	}
 
 	public String[] getColumns(final Class<? extends Table> klaas) {

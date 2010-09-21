@@ -66,7 +66,7 @@ public class TableTest {
 	}
 
 	private class TableMultipleColumn implements Table {
-		public static final String SQL = "CREATE TABLE IF NOT EXISTS TableMultipleColumn ( id INTEGER, text TEXT, amount REAL) ";
+		public static final String SQL = "CREATE TABLE IF NOT EXISTS TableMultipleColumn ( id INTEGER, text TEXT, amount REAL)";
 
 		@Column
 		Integer id;
@@ -76,16 +76,31 @@ public class TableTest {
 
 		@Column
 		float amount;
+
+		@Override
+		public boolean isNew() {
+			return id != null;
+		}
 	}
 
 	private class TableColumnWithAnnotations implements Table {
-		public static final String SQL = "CREATE TABLE IF NOT EXISTS TableColumnWithAnnotations ( id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ) ";
+		public static final String SQL = "CREATE TABLE IF NOT EXISTS TableColumnWithAnnotations ( id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL )";
 
 		@Column(primaryKey = true, autoIncrement = true, notNull = true)
 		Integer id;
+
+		@Override
+		public boolean isNew() {
+			return id != null;
+		}
 	}
 
 	private class TableNoColumn implements Table {
 		Integer foo;
+
+		@Override
+		public boolean isNew() {
+			return true;
+		}
 	}
 }
