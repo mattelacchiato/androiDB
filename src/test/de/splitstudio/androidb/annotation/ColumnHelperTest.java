@@ -3,6 +3,7 @@ package de.splitstudio.androidb.annotation;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -38,5 +39,11 @@ public class ColumnHelperTest {
 	public void getPrimaryKey_TableWithPrimaryKey_primaryKeyField() throws SecurityException, NoSuchFieldException {
 		Table table = new TableColumnWithAnnotations();
 		assertThat(ColumnHelper.getPrimaryKey(table), equalTo(table.getClass().getField("id")));
+	}
+
+	@Test
+	public void getPrimaryKey_TableWithoutPrimaryKey_null() throws SecurityException, NoSuchFieldException {
+		Table table = new TableNoColumn();
+		assertNull(ColumnHelper.getPrimaryKey(table));
 	}
 }
