@@ -11,10 +11,12 @@ public class TypeMapper {
 			return "NULL";
 		}
 		if (type.equals(Integer.class) || type.equals(Short.class) || type.equals(Byte.class)
-				|| type.isInstance(Long.class)) {
+				|| type.isInstance(Long.class) || type.equals(int.class) || type.equals(short.class)
+				|| type.equals(byte.class) || type.equals(long.class)) {
 			return "INTEGER";
 		}
-		if (type.equals(Float.class) || type.equals(Double.class)) {
+		if (type.equals(Float.class) || type.equals(Double.class) || type.equals(float.class)
+				|| type.equals(double.class)) {
 			return "REAL";
 		}
 		if (type.equals(String.class)) {
