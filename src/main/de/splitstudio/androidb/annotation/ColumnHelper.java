@@ -32,4 +32,13 @@ public class ColumnHelper {
 		return getColumns(table.getClass());
 	}
 
+	public static boolean hasColumns(final Table table) {
+		for (Field field : table.getClass().getDeclaredFields()) {
+			if (!isColumn(field)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 }

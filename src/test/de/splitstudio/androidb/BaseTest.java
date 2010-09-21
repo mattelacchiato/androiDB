@@ -33,13 +33,6 @@ public class BaseTest {
 		mocks = new Object[] { db, cursor };
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void createTable_noColumn_throwsException() {
-		replay(mocks);
-		base.createTable(new TableNoColumn());
-		verify(mocks);
-	}
-
 	@Test
 	public void createTable_allAnnotions_executeCorrectSql() {
 		db.execSQL(TableColumnWithAnnotations.SQL);

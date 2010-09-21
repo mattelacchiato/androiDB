@@ -1,10 +1,7 @@
 package de.splitstudio.androidb;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -31,48 +28,48 @@ public class Base {
 	}
 
 	public Cursor getById(final Class<? extends Table> klaas, final long id) {
-		return db.query(klaas.getSimpleName(), getColumns(klaas), "WHERE id = " + id, null, null, null, null);
+		return db.query(klaas.getSimpleName(), ColumnHelper.getColumns(klaas), "WHERE id = " + id, null, null, null,
+			null);
 	}
 
-	public Long insert(final Table table) {
-		if (!createTable(table)) {
-			return ERR_FAIL;
+	public boolean insert(final Table table) {
+		String columns = "";
+		String values = "";
+		if (!ColumnHelper.hasColumns(table) || !createTable(table)) {
+			return false;
 		}
-
-		ContentValues values = new ContentValues();
-		List<String> columns = Arrays.asList(getColumns(table));
 
 		try {
 			for (Field field : table.getClass().getDeclaredFields()) {
-				//TODO: Outsource type mapping
-				//TODO: use plain sql string instead of contentvalues?!
-				String fieldName = field.getName();
-				if (columns.contains(fieldName)) {
-					Object value = field.get(table);
-					if (value instanceof String) {
-						values.put(fieldName, (String) value);
-					} else if (value instanceof Integer) {
-						values.put(fieldName, (Integer) value);
-					}
+				if (ColumnHelper.isColumn(field)) {
+					columns += " " + field.getName() + DELIMITER;
+					values += " " + field.get(table) + DELIMITER;
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			return ERR_FAIL;
+			return false;
 		}
+		columns = columns.substring(0, columns.lastIndexOf(DELIMITER));
+		values = values.substring(0, values.lastIndexOf(DELIMITER));
 
-		return db.insert(table.getClass().getSimpleName(), null, values);
+		try {
+			db.execSQL(String.format("INSERT INTO %s (%s) VALUES (%s)", table.getClass().getSimpleName(), columns,
+				values));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 
-	public boolean createTable(final Table table) {
+	boolean createTable(final Table table) {
 		String name = table.getClass().getSimpleName();
 		String sqlColumns = "";
-		boolean hasAnnotions = false;
 
 		for (Field field : table.getClass().getDeclaredFields()) {
 			String fielName = field.getName();
 			if (ColumnHelper.isColumn(field)) {
-				hasAnnotions = true;
 				try {
 					String constraints = TypeMapper.getConstraints(field.getAnnotations());
 					sqlColumns += " " + fielName;
@@ -86,10 +83,6 @@ public class Base {
 					return false;
 				}
 			}
-		}
-
-		if (!hasAnnotions) {
-			throw new IllegalArgumentException("Table " + name + " has no Annotions!");
 		}
 
 		//TODO: do versioning in table!
@@ -123,7 +116,7 @@ public class Base {
 
 	public boolean save(final Table table) {
 		if (table.isNew()) {
-			return insert(table) > 0;
+			return insert(table);
 		}
 		/*TODO: update!*/
 		return false;
