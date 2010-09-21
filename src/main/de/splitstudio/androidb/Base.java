@@ -9,11 +9,15 @@ import de.splitstudio.androidb.annotation.ColumnHelper;
 
 public class Base {
 
+	private static final String SQL_INSERT = "INSERT INTO %s (%s) VALUES (%s)";
+
+	private static final String SQL_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS %s (%s)";
+
 	private static final String EMPTY_STRING = "";
 
 	private static final String SPACE = " ";
 
-	private static final char DELIMITER = ',';
+	private static final String DELIMITER = ",";
 
 	private final SQLiteDatabase db;
 
@@ -35,8 +39,8 @@ public class Base {
 	}
 
 	public boolean insert(final Table table) {
-		String columns = EMPTY_STRING;
-		String values = EMPTY_STRING;
+		StringBuilder columns = new StringBuilder();
+		StringBuilder values = new StringBuilder();
 		if (!ColumnHelper.hasColumns(table) || !createTable(table)) {
 			return false;
 		}
@@ -44,20 +48,19 @@ public class Base {
 		try {
 			for (Field field : table.getClass().getDeclaredFields()) {
 				if (ColumnHelper.isColumn(field)) {
-					columns += SPACE + field.getName() + DELIMITER;
-					values += SPACE + field.get(table) + DELIMITER;
+					columns.append(SPACE).append(field.getName()).append(DELIMITER);
+					values.append(SPACE).append(field.get(table)).append(DELIMITER);
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
-		columns = columns.substring(0, columns.lastIndexOf(DELIMITER));
-		values = values.substring(0, values.lastIndexOf(DELIMITER));
+		columns.deleteCharAt(columns.lastIndexOf(DELIMITER));
+		values.deleteCharAt(values.lastIndexOf(DELIMITER));
 
 		try {
-			db.execSQL(String.format("INSERT INTO %s (%s) VALUES (%s)", table.getClass().getSimpleName(), columns,
-				values));
+			db.execSQL(String.format(SQL_INSERT, table.getClass().getSimpleName(), columns, values));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -89,7 +92,7 @@ public class Base {
 
 		//TODO: do versioning in table!
 		sqlColumns = sqlColumns.substring(0, sqlColumns.lastIndexOf(DELIMITER));
-		db.execSQL("CREATE TABLE IF NOT EXISTS " + name + " (" + sqlColumns + ")");
+		db.execSQL(String.format(SQL_CREATE_TABLE, name, sqlColumns));
 		return true;
 	}
 
