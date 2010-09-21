@@ -13,8 +13,6 @@ public class Base {
 
 	private static final String SQL_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS %s (%s)";
 
-	private static final String EMPTY_STRING = "";
-
 	private static final String SPACE = " ";
 
 	private static final String DELIMITER = ",";
@@ -70,19 +68,19 @@ public class Base {
 
 	boolean createTable(final Table table) {
 		String name = table.getClass().getSimpleName();
-		String sqlColumns = EMPTY_STRING;
+		StringBuilder sqlColumns = new StringBuilder();
 
 		for (Field field : table.getClass().getDeclaredFields()) {
 			String fielName = field.getName();
 			if (ColumnHelper.isColumn(field)) {
 				try {
 					String constraints = TypeMapper.getConstraints(field.getAnnotations());
-					sqlColumns += SPACE + fielName;
-					sqlColumns += SPACE + TypeMapper.getSqlType(field.getType());
-						sqlColumns += SPACE + constraints;
+					sqlColumns.append(SPACE).append(fielName);
+					sqlColumns.append(SPACE).append(TypeMapper.getSqlType(field.getType()));
 					if (constraints.length() > 0) {
+						sqlColumns.append(SPACE).append(constraints);
 					}
-					sqlColumns += DELIMITER;
+					sqlColumns.append(DELIMITER);
 				} catch (Exception e) {
 					e.printStackTrace();
 					return false;
@@ -91,7 +89,7 @@ public class Base {
 		}
 
 		//TODO: do versioning in table!
-		sqlColumns = sqlColumns.substring(0, sqlColumns.lastIndexOf(DELIMITER));
+		sqlColumns.deleteCharAt(sqlColumns.lastIndexOf(DELIMITER));
 		db.execSQL(String.format(SQL_CREATE_TABLE, name, sqlColumns));
 		return true;
 	}
