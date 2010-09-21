@@ -1,10 +1,8 @@
 package de.splitstudio.androidb;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
 import android.database.Cursor;
-import de.splitstudio.androidb.annotation.Column;
 
 public class TypeMapper {
 
@@ -74,22 +72,4 @@ public class TypeMapper {
 		}
 	}
 
-	public static String getConstraints(final Annotation[] annotations) {
-		String constraints = "";
-		for (Annotation annotation : annotations) {
-			if (annotation instanceof Column) {
-				Column column = ((Column) annotation);
-				if (column.primaryKey()) {
-					constraints += "PRIMARY KEY ";
-				}
-				if (column.autoIncrement()) {
-					constraints += "AUTOINCREMENT ";
-				}
-				if (column.notNull()) {
-					constraints += "NOT NULL ";
-				}
-			}
-		}
-		return constraints;
-	}
 }

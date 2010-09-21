@@ -9,19 +9,19 @@ import de.splitstudio.androidb.annotation.ColumnHelper;
 
 public class Base {
 
-	private static final String SQL_UPDATE = "UPDATE %s SET %s WHERE %s";
+	public static final String SQL_UPDATE = "UPDATE %s SET %s WHERE %s";
 
-	private static final String SQL_INSERT = "INSERT INTO %s (%s) VALUES (%s)";
+	public static final String SQL_INSERT = "INSERT INTO %s (%s) VALUES (%s)";
 
-	private static final String SQL_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS %s (%s)";
+	public static final String SQL_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS %s (%s)";
 
-	private static final String SPACE = " ";
+	public static final String SPACE = " ";
 
-	private static final String DELIMITER = ",";
+	public static final String DELIMITER = ",";
 
-	private static final String QUOTE = "'";
+	public static final String QUOTE = "'";
 
-	private static final Object EQUAL = "=";
+	public static final Object EQUAL = "=";
 
 	private final SQLiteDatabase db;
 
@@ -95,13 +95,15 @@ public class Base {
 
 		try {
 			for (Field field : table.getClass().getDeclaredFields()) {
-				String fielName = field.getName();
 				if (ColumnHelper.isColumn(field)) {
-					String constraints = TypeMapper.getConstraints(field.getAnnotations());
-					sqlColumns.append(SPACE).append(fielName);
-					sqlColumns.append(SPACE).append(TypeMapper.getSqlType(field.getType()));
+					sqlColumns.append(SPACE);
+					sqlColumns.append(field.getName());
+					sqlColumns.append(SPACE);
+					sqlColumns.append(TypeMapper.getSqlType(field.getType()));
+
+					StringBuilder constraints = ColumnHelper.getConstraints(field);
 					if (constraints.length() > 0) {
-						sqlColumns.append(SPACE).append(constraints);
+						sqlColumns.append(constraints);
 					}
 					sqlColumns.append(DELIMITER);
 				}
