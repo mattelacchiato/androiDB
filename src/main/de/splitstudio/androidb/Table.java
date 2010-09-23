@@ -1,14 +1,20 @@
 package de.splitstudio.androidb;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import de.splitstudio.androidb.annotation.Column;
 import de.splitstudio.androidb.annotation.ColumnHelper;
 
 public abstract class Table {
 
-	public static final String SQL_UPDATE = "UPDATE %s SET %s WHERE %s";
+	public static final String PRIMARY_KEY = "id";
+
+	public static final String SQL_UPDATE = "UPDATE %s SET %s WHERE id='%s'";
 
 	public static final String SQL_INSERT = "INSERT INTO %s (%s) VALUES (%s)";
 
@@ -28,21 +34,21 @@ public abstract class Table {
 		this.db = db;
 	}
 
-	public abstract boolean isNew();
+	@Column(primaryKey = true, autoIncrement = true, notNull = true)
+	protected Long id = null;
+
+	public boolean isNew() {
+		return id == null;
+	}
 
 	public boolean find() {
-		Field primaryKey = ColumnHelper.getPrimaryKey(this);
 		try {
-			if (primaryKey == null) {
-				return false;
-			}
-			Object value = primaryKey.get(this);
-			if (value == null) {
+			if (id == null) {
 				return false;
 			}
 			Class<? extends Table> klaas = this.getClass();
-			Cursor cursor = db.query(klaas.getSimpleName(), ColumnHelper.getColumns(klaas), String.format(
-				"WHERE %s='%s'", primaryKey.getName(), value), null, null, null, null);
+			Cursor cursor = db.query(klaas.getSimpleName(), getColumns(), "WHERE id='" + id + "'", null, null, null,
+				null);
 			return fill(cursor);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -56,8 +62,8 @@ public abstract class Table {
 		}
 
 		try {
-			for (Field field : this.getClass().getDeclaredFields()) {
-				if (ColumnHelper.isColumn(field)) {
+			for (Field field : getFields()) {
+				if (isColumn(field)) {
 					setTypedValue(c, field);
 				}
 			}
@@ -72,13 +78,13 @@ public abstract class Table {
 	public boolean insert() {
 		StringBuilder columns = new StringBuilder();
 		StringBuilder values = new StringBuilder();
-		if (!ColumnHelper.hasColumns(this) || !createTable()) {
+		if (!createTable()) {
 			return false;
 		}
 
 		try {
-			for (Field field : this.getClass().getDeclaredFields()) {
-				if (ColumnHelper.isColumn(field)) {
+			for (Field field : getFields()) {
+				if (isColumn(field)) {
 					columns.append(SPACE).append(field.getName()).append(DELIMITER);
 					values.append(SPACE).append(QUOTE).append(field.get(this)).append(QUOTE).append(DELIMITER);
 				}
@@ -95,14 +101,11 @@ public abstract class Table {
 	}
 
 	public boolean delete() {
-		Field primaryKey = ColumnHelper.getPrimaryKey(this);
 		try {
-			Object value = primaryKey.get(this);
-			if (primaryKey == null || value == null) {
+			if (id == null) {
 				return false;
 			}
-			return db.delete(this.getClass().getSimpleName(), String.format("WHERE %s='%s'", primaryKey.getName(),
-				value), null) > 0;
+			return db.delete(this.getClass().getSimpleName(), "WHERE id='" + id + "'", null) > 0;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -115,8 +118,8 @@ public abstract class Table {
 		StringBuilder sqlColumns = new StringBuilder();
 
 		try {
-			for (Field field : this.getClass().getDeclaredFields()) {
-				if (ColumnHelper.isColumn(field)) {
+			for (Field field : getFields()) {
+				if (isColumn(field)) {
 					sqlColumns.append(SPACE);
 					sqlColumns.append(field.getName());
 					sqlColumns.append(SPACE);
@@ -139,17 +142,15 @@ public abstract class Table {
 	}
 
 	public boolean update() {
-		Field primaryKey = ColumnHelper.getPrimaryKey(this);
 		StringBuilder updateValues = new StringBuilder();
 
 		try {
-			if (primaryKey == null || primaryKey.get(this) == null) {
+			if (id == null) {
 				return false;
 			}
 
-			String whereClause = primaryKey.getName() + EQUAL + QUOTE + primaryKey.get(this) + QUOTE;
-			for (Field field : this.getClass().getDeclaredFields()) {
-				if (ColumnHelper.isColumn(field) && !field.equals(primaryKey)) {
+			for (Field field : getFields()) {
+				if (isColumn(field) && !isPrimaryKey(field)) {
 					updateValues.append(field.getName());
 					updateValues.append(EQUAL);
 					updateValues.append(QUOTE);
@@ -160,12 +161,16 @@ public abstract class Table {
 				}
 			}
 			trimLastDelimiter(updateValues);
-			db.execSQL(String.format(SQL_UPDATE, this.getClass().getSimpleName(), updateValues, whereClause));
+			db.execSQL(String.format(SQL_UPDATE, this.getClass().getSimpleName(), updateValues, id));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
 		return true;
+	}
+
+	private boolean isPrimaryKey(final Field field) {
+		return PRIMARY_KEY.equals(field.getName());
 	}
 
 	public boolean save() {
@@ -176,7 +181,10 @@ public abstract class Table {
 	}
 
 	private StringBuilder trimLastDelimiter(final StringBuilder sb) {
-		return sb.delete(sb.lastIndexOf(DELIMITER), sb.length());
+		if (sb.lastIndexOf(DELIMITER) >= 0) {
+			return sb.delete(sb.lastIndexOf(DELIMITER), sb.length());
+		}
+		return sb;
 	}
 
 	private void setTypedValue(final Cursor c, final Field field) throws IllegalArgumentException,
@@ -201,6 +209,50 @@ public abstract class Table {
 		} else if (type.equals(String.class)) {
 			field.set(this, c.getString(index));
 		}
+	}
+
+	private boolean isColumn(final Field field) {
+		return field.getAnnotation(Column.class) != null;
+	}
+
+	private List<String> getColumnsAsList() {
+		List<String> columns = new ArrayList<String>();
+		for (Field field : getFields()) {
+			if (isColumn(field)) {
+				columns.add(field.getName());
+			}
+		}
+		return columns;
+	}
+
+	String[] getColumns() {
+		List<String> columns = getColumnsAsList();
+		return columns.toArray(new String[columns.size()]);
+	}
+
+	/**
+	 * @return All declared fields from the current class plus the {@link #PRIMARY_KEY} field from {@link Table}.
+	 */
+	List<Field> getFields() {
+		List<Field> fields = new ArrayList<Field>();
+		try {
+			fields.add(Table.class.getDeclaredField(PRIMARY_KEY));
+		} catch (Exception e) {}
+		fields.addAll(Arrays.asList(this.getClass().getDeclaredFields()));
+		return fields;
+	}
+
+	/**
+	 * use only for testing!
+	 * 
+	 * @param id
+	 */
+	final void setId(final Long id) {
+		this.id = id;
+	}
+
+	public final Long getId() {
+		return id;
 	}
 
 }

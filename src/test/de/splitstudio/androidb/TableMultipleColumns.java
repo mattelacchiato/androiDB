@@ -9,20 +9,12 @@ public class TableMultipleColumns extends Table {
 	}
 
 	public static final String SQL = "CREATE TABLE IF NOT EXISTS " + TableMultipleColumns.class.getSimpleName()
-			+ " ( id INTEGER, text TEXT, amount REAL)";
-
-	@Column
-	protected Integer id;
+			+ " ( id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, text TEXT, amount REAL)";
 
 	@Column
 	protected String text;
 
 	@Column
 	protected float amount;
-
-	@Override
-	public boolean isNew() {
-		return id == null;
-	}
 
 }

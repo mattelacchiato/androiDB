@@ -10,20 +10,12 @@ public class TableMultipleColumnsAnnotated extends Table {
 
 	public static final String SQL = "CREATE TABLE IF NOT EXISTS "
 			+ TableMultipleColumnsAnnotated.class.getSimpleName()
-			+ " ( id INTEGER PRIMARY KEY, text TEXT, amount REAL)";
-
-	@Column(primaryKey = true)
-	protected Integer id;
+			+ " ( id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, text TEXT, amount REAL)";
 
 	@Column
 	protected String text;
 
 	@Column
 	protected float amount;
-
-	@Override
-	public boolean isNew() {
-		return id == null;
-	}
 
 }

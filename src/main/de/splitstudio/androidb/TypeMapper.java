@@ -1,6 +1,5 @@
 package de.splitstudio.androidb;
 
-
 public class TypeMapper {
 
 	public static final String BLOB = "BLOB";
@@ -17,9 +16,9 @@ public class TypeMapper {
 		if (type == null) {
 			return NULL;
 		}
-		if (type.equals(Integer.class) || type.equals(Short.class) || type.equals(Byte.class)
-				|| type.isInstance(Long.class) || type.equals(int.class) || type.equals(short.class)
-				|| type.equals(byte.class) || type.equals(long.class)) {
+		if (type.equals(Long.class) || type.equals(Integer.class) || type.equals(Short.class)
+				|| type.equals(Byte.class) || type.isInstance(Long.class) || type.equals(int.class)
+				|| type.equals(short.class) || type.equals(byte.class) || type.equals(long.class)) {
 			return INTEGER;
 		}
 		if (type.equals(Float.class) || type.equals(Double.class) || type.equals(float.class)
