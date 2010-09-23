@@ -78,9 +78,8 @@ public abstract class Table {
 			if (_id == null) {
 				return false;
 			}
-			Class<? extends Table> klaas = this.getClass();
-			Cursor cursor = db.query(klaas.getSimpleName(), getColumns(), PRIMARY_KEY + EQUAL + _id, null, null, null,
-				null);
+			Cursor cursor = db.query(this.getClass().getSimpleName(), getColumns(), PRIMARY_KEY + EQUAL + _id, null,
+				null, null, null);
 			return fill(cursor);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -248,7 +247,7 @@ public abstract class Table {
 	}
 
 	boolean fill(final Cursor c) {
-		if (c.getCount() != 1) {
+		if (!c.moveToFirst()) {
 			return false;
 		}
 
