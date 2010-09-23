@@ -29,6 +29,7 @@ public class TableTest {
 		db = createMock(SQLiteDatabase.class);
 		cursor = createMock(Cursor.class);
 		mocks = new Object[] { db, cursor };
+		Table.createdTables.clear();
 	}
 
 	@Test
@@ -37,8 +38,7 @@ public class TableTest {
 		EasyMock.expectLastCall();
 
 		replay(mocks);
-		TableColumnWithAnnotations table = new TableColumnWithAnnotations(db);
-		table.createTable();
+		new TableColumnWithAnnotations(db);
 		verify(mocks);
 	}
 
@@ -48,8 +48,7 @@ public class TableTest {
 		EasyMock.expectLastCall();
 
 		replay(mocks);
-		TableMultipleColumns table = new TableMultipleColumns(db);
-		table.createTable();
+		new TableMultipleColumns(db);
 		verify(mocks);
 	}
 
@@ -58,6 +57,7 @@ public class TableTest {
 		EasyMock.expect(cursor.getCount()).andReturn(0);
 
 		replay(mocks);
+		Table.createdTables.add(TableMultipleColumns.class.getSimpleName());
 		TableMultipleColumns table = new TableMultipleColumns(db);
 		boolean result = table.fill(cursor);
 		verify(mocks);
@@ -70,6 +70,7 @@ public class TableTest {
 		EasyMock.expect(cursor.getCount()).andReturn(2);
 
 		replay(mocks);
+		Table.createdTables.add(TableMultipleColumns.class.getSimpleName());
 		TableMultipleColumns table = new TableMultipleColumns(db);
 		boolean result = table.fill(cursor);
 		verify(mocks);
@@ -79,9 +80,10 @@ public class TableTest {
 
 	@Test
 	public void fill_oneRowCursor_trueAndFilled() {
+		Table.createdTables.add(TableColumnWithAnnotations.class.getSimpleName());
 		TableColumnWithAnnotations table = new TableColumnWithAnnotations(db);
 		EasyMock.expect(cursor.getCount()).andReturn(1);
-		EasyMock.expect(cursor.getColumnIndex("id")).andReturn(0);
+		EasyMock.expect(cursor.getColumnIndex(Table.PRIMARY_KEY)).andReturn(0);
 		EasyMock.expect(cursor.getLong(0)).andReturn(42L);
 
 		replay(mocks);
@@ -94,13 +96,12 @@ public class TableTest {
 
 	@Test
 	public void insert_tableWithColumns_trueAndCorrectSqlExecuted() {
+		String tableName = TableColumnWithAnnotations.class.getSimpleName();
+		Table.createdTables.add(tableName);
 		TableColumnWithAnnotations table = new TableColumnWithAnnotations(db);
 		table.setId(42L);
 
-		db.execSQL(String.format("INSERT INTO %s (%s) VALUES (%s)", table.getClass().getSimpleName(), " id", " "
-				+ "'42'"));
-		EasyMock.expectLastCall();
-		db.execSQL(TableColumnWithAnnotations.SQL);
+		db.execSQL(String.format("INSERT INTO %s (%s) VALUES (%s)", tableName, " _id", " " + "42"));
 		EasyMock.expectLastCall();
 
 		replay(mocks);
@@ -110,11 +111,12 @@ public class TableTest {
 
 	@Test
 	public void update_tableWithPrimaryKey_trueAndCorrectSqlExecuted() {
+		Table.createdTables.add(TableMultipleColumnsAnnotated.class.getSimpleName());
 		TableMultipleColumnsAnnotated table = new TableMultipleColumnsAnnotated(db);
 		table.setId(42L);
 		table.amount = 3.14f;
 		table.text = "foo";
-		db.execSQL("UPDATE TableMultipleColumnsAnnotated SET text='foo', amount='3.14' WHERE id='42'");
+		db.execSQL("UPDATE TableMultipleColumnsAnnotated SET text='foo', amount=3.14 WHERE id=42");
 		EasyMock.expectLastCall();
 
 		replay(mocks);
@@ -126,9 +128,10 @@ public class TableTest {
 
 	@Test
 	public void delete_tableWithPrimaryKey_trueAndCorrectSqlExecuted() {
+		Table.createdTables.add(TableColumnWithAnnotations.class.getSimpleName());
 		TableColumnWithAnnotations table = new TableColumnWithAnnotations(db);
 		table.setId(42L);
-		EasyMock.expect(db.delete(table.getClass().getSimpleName(), "WHERE id='42'", null)).andReturn(1);
+		EasyMock.expect(db.delete(table.getClass().getSimpleName(), "WHERE id=42", null)).andReturn(1);
 		replay(mocks);
 		boolean result = table.delete();
 		verify(mocks);
@@ -138,9 +141,10 @@ public class TableTest {
 
 	@Test
 	public void save_oldTable_update() {
+		Table.createdTables.add(TableMultipleColumnsAnnotated.class.getSimpleName());
 		TableMultipleColumnsAnnotated table = new TableMultipleColumnsAnnotated(db);
 		table.setId(42L);
-		db.execSQL("UPDATE TableMultipleColumnsAnnotated SET text='null', amount='0.0' WHERE id='42'");
+		db.execSQL("UPDATE TableMultipleColumnsAnnotated SET text=null, amount=0.0 WHERE id=42");
 		EasyMock.expectLastCall();
 
 		replay(mocks);
@@ -151,11 +155,10 @@ public class TableTest {
 
 	@Test
 	public void save_newTable_insert() {
+		Table.createdTables.add(TableMultipleColumnsAnnotated.class.getSimpleName());
 		TableMultipleColumnsAnnotated table = new TableMultipleColumnsAnnotated(db);
 		db.execSQL(String.format("INSERT INTO %s (%s) VALUES (%s)", table.getClass().getSimpleName(),
-			" id, text, amount", " " + "'null', 'null', '0.0'"));
-		EasyMock.expectLastCall();
-		db.execSQL(TableMultipleColumnsAnnotated.SQL);
+			" _id, text, amount", " " + "null, null, 0.0"));
 		EasyMock.expectLastCall();
 
 		replay(mocks);
@@ -167,7 +170,7 @@ public class TableTest {
 	@Test
 	public void getColumns_returnsAllAnnotatedColumns() {
 		Table table = new TableColumnWithAnnotations(db);
-		assertThat(table.getColumns(), equalTo(new String[] { "id" }));
+		assertThat(table.getColumns(), equalTo(new String[] { "_id" }));
 	}
 
 }

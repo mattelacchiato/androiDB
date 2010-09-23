@@ -3,7 +3,9 @@ package de.splitstudio.androidb;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -15,7 +17,7 @@ public abstract class Table {
 
 	public static final String PRIMARY_KEY = "_id";
 
-	public static final String SQL_UPDATE = "UPDATE %s SET %s WHERE id='%s'";
+	public static final String SQL_UPDATE = "UPDATE %s SET %s WHERE id=%s";
 
 	public static final String SQL_INSERT = "INSERT INTO %s (%s) VALUES (%s)";
 
@@ -25,14 +27,16 @@ public abstract class Table {
 
 	public static final String DELIMITER = ",";
 
-	public static final String QUOTE = "'";
-
 	public static final String EQUAL = "=";
 
 	private final SQLiteDatabase db;
 
+	static final Set<String> createdTables = new HashSet<String>();
+
 	public Table(final Context context) {
-		db = (SQLiteDatabase.openOrCreateDatabase(context.getDatabasePath(context.getPackageName()), null));
+		//create or open db.
+		this(context.openOrCreateDatabase(context.getPackageName().substring(context.getPackageName().lastIndexOf('.'))
+				.concat(".sqlite"), SQLiteDatabase.CREATE_IF_NECESSARY, null));
 	}
 
 	/**
@@ -42,18 +46,26 @@ public abstract class Table {
 	 */
 	Table(final SQLiteDatabase db) {
 		this.db = db;
+		createIfNecessary();
 	}
 
 	@Column(primaryKey = true, autoIncrement = true, notNull = true)
 	protected Long _id = null;
 
-	public boolean isNew() {
+	protected abstract void setValue(Field field, Object value) throws IllegalArgumentException, IllegalAccessException;
+
+	protected abstract Object getValue(Field field) throws IllegalArgumentException, IllegalAccessException;
+
+	public final boolean isNew() {
 		return _id == null;
 	}
 
+	public String getTableName() {
+		return this.getClass().getSimpleName();
+	}
+
 	public Cursor all() {
-		Cursor cursor = db.query(this.getClass().getSimpleName(), getColumns(), null, null, null, null, null);
-		return cursor;
+		return db.query(this.getClass().getSimpleName(), getColumns(), null, null, null, null, null);
 	}
 
 	public boolean find() {
@@ -62,8 +74,7 @@ public abstract class Table {
 				return false;
 			}
 			Class<? extends Table> klaas = this.getClass();
-			Cursor cursor = db.query(klaas.getSimpleName(), getColumns(), "WHERE id='" + _id + "'", null, null, null,
-				null);
+			Cursor cursor = db.query(klaas.getSimpleName(), getColumns(), "WHERE id=" + _id, null, null, null, null);
 			return fill(cursor);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -71,37 +82,15 @@ public abstract class Table {
 		}
 	}
 
-	public boolean fill(final Cursor c) {
-		if (c.getCount() != 1) {
-			return false;
-		}
-
-		try {
-			for (Field field : getFields()) {
-				if (isColumn(field)) {
-					setTypedValue(c, field);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-
-		return true;
-	}
-
 	public boolean insert() {
 		StringBuilder columns = new StringBuilder();
 		StringBuilder values = new StringBuilder();
-		if (!createTable()) {
-			return false;
-		}
 
 		try {
 			for (Field field : getFields()) {
 				if (isColumn(field)) {
 					columns.append(SPACE).append(field.getName()).append(DELIMITER);
-					values.append(SPACE).append(QUOTE).append(field.get(this)).append(QUOTE).append(DELIMITER);
+					values.append(SPACE).append(getValueQuotedIfNeeded(field)).append(DELIMITER);
 				}
 			}
 			trimLastDelimiter(columns);
@@ -120,40 +109,11 @@ public abstract class Table {
 			if (_id == null) {
 				return false;
 			}
-			return db.delete(this.getClass().getSimpleName(), "WHERE id='" + _id + "'", null) > 0;
+			return db.delete(this.getClass().getSimpleName(), "WHERE id=" + _id, null) > 0;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
-	}
-
-	//TODO: do versioning in table!
-	boolean createTable() {
-		String name = this.getClass().getSimpleName();
-		StringBuilder sqlColumns = new StringBuilder();
-
-		try {
-			for (Field field : getFields()) {
-				if (isColumn(field)) {
-					sqlColumns.append(SPACE);
-					sqlColumns.append(field.getName());
-					sqlColumns.append(SPACE);
-					sqlColumns.append(TypeMapper.getSqlType(field.getType()));
-
-					StringBuilder constraints = ColumnHelper.getConstraints(field);
-					if (constraints.length() > 0) {
-						sqlColumns.append(constraints);
-					}
-					sqlColumns.append(DELIMITER);
-				}
-			}
-			trimLastDelimiter(sqlColumns);
-			db.execSQL(String.format(SQL_CREATE_TABLE, name, sqlColumns));
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-		return true;
 	}
 
 	public boolean update() {
@@ -168,9 +128,7 @@ public abstract class Table {
 				if (isColumn(field) && !isPrimaryKey(field)) {
 					updateValues.append(field.getName());
 					updateValues.append(EQUAL);
-					updateValues.append(QUOTE);
-					updateValues.append(field.get(this));
-					updateValues.append(QUOTE);
+					updateValues.append(getValueQuotedIfNeeded(field));
 					updateValues.append(DELIMITER);
 					updateValues.append(SPACE);
 				}
@@ -184,15 +142,26 @@ public abstract class Table {
 		return true;
 	}
 
-	private boolean isPrimaryKey(final Field field) {
-		return PRIMARY_KEY.equals(field.getName());
-	}
-
 	public boolean save() {
 		if (isNew()) {
 			return insert();
 		}
 		return update();
+	}
+
+	private Object getValueQuotedIfNeeded(final Field field) throws IllegalArgumentException, IllegalAccessException {
+		Object value = getValue(field);
+		if (value == null) {
+			return value;
+		}
+		if (value instanceof String) {
+			return String.format("'%s'", value);
+		}
+		return value;
+	}
+
+	private boolean isPrimaryKey(final Field field) {
+		return PRIMARY_KEY.equals(field.getName());
 	}
 
 	private StringBuilder trimLastDelimiter(final StringBuilder sb) {
@@ -202,27 +171,28 @@ public abstract class Table {
 		return sb;
 	}
 
+	//this method *must* lay in this class to access protected fields!
 	private void setTypedValue(final Cursor c, final Field field) throws IllegalArgumentException,
 			IllegalAccessException {
 		int index = c.getColumnIndex(field.getName());
 		Class<?> type = field.getType();
 
 		if (type.equals(long.class) || type.equals(Long.class)) {
-			field.set(this, c.getLong(index));
+			setValue(field, c.getLong(index));
 		} else if (type.equals(int.class) || type.equals(Integer.class)) {
-			field.set(this, c.getInt(index));
+			setValue(field, c.getInt(index));
 		} else if (type.equals(short.class) || type.equals(Short.class)) {
-			field.set(this, c.getShort(index));
+			setValue(field, c.getShort(index));
 		} else if (type.equals(byte.class) || type.equals(Byte.class)) {
-			field.set(this, (byte) c.getShort(index));
+			setValue(field, (byte) c.getShort(index));
 		} else if (type.equals(double.class) || type.equals(Double.class)) {
-			field.set(this, c.getDouble(index));
+			setValue(field, c.getDouble(index));
 		} else if (type.equals(float.class) || type.equals(Float.class)) {
-			field.set(this, c.getFloat(index));
+			setValue(field, c.getFloat(index));
 		} else if (type.equals(char.class)) {
-			field.set(this, (char) c.getShort(index));
+			setValue(field, (char) c.getShort(index));
 		} else if (type.equals(String.class)) {
-			field.set(this, c.getString(index));
+			setValue(field, c.getString(index));
 		}
 	}
 
@@ -258,6 +228,10 @@ public abstract class Table {
 		return fields;
 	}
 
+	public final Long getId() {
+		return _id;
+	}
+
 	/**
 	 * use only for testing!
 	 * 
@@ -267,8 +241,57 @@ public abstract class Table {
 		this._id = id;
 	}
 
-	public final Long getId() {
-		return _id;
+	boolean fill(final Cursor c) {
+		if (c.getCount() != 1) {
+			return false;
+		}
+
+		try {
+			for (Field field : getFields()) {
+				if (isColumn(field)) {
+					setTypedValue(c, field);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+
+		return true;
+	}
+
+	//TODO: do versioning in table!
+	boolean createIfNecessary() {
+		StringBuilder sqlColumns = new StringBuilder();
+		String name = getTableName();
+
+		if (createdTables.contains(name)) {
+			return true;
+		}
+
+		try {
+			for (Field field : getFields()) {
+				if (isColumn(field)) {
+					sqlColumns.append(SPACE);
+					sqlColumns.append(field.getName());
+					sqlColumns.append(SPACE);
+					sqlColumns.append(TypeMapper.getSqlType(field.getType()));
+
+					StringBuilder constraints = ColumnHelper.getConstraints(field);
+					if (constraints.length() > 0) {
+						sqlColumns.append(constraints);
+					}
+					sqlColumns.append(DELIMITER);
+				}
+			}
+			trimLastDelimiter(sqlColumns);
+			db.execSQL(String.format(SQL_CREATE_TABLE, name, sqlColumns));
+			createdTables.add(name);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 
 }
