@@ -17,7 +17,7 @@ public abstract class Table {
 
 	public static final String PRIMARY_KEY = "_id";
 
-	public static final String SQL_UPDATE = "UPDATE %s SET %s WHERE id=%s";
+	public static final String SQL_UPDATE = "UPDATE %s SET %s WHERE " + PRIMARY_KEY + "=%s";
 
 	public static final String SQL_INSERT = "INSERT INTO %s (%s) VALUES (%s)";
 
@@ -34,9 +34,14 @@ public abstract class Table {
 	static final Set<String> createdTables = new HashSet<String>();
 
 	public Table(final Context context) {
+		this(context, null);
+	}
+
+	public Table(final Context context, final Long _id) {
 		//create or open db.
 		this(context.openOrCreateDatabase(context.getPackageName().substring(context.getPackageName().lastIndexOf('.'))
 				.concat(".sqlite"), SQLiteDatabase.CREATE_IF_NECESSARY, null));
+		this._id = _id;
 	}
 
 	/**
@@ -74,7 +79,8 @@ public abstract class Table {
 				return false;
 			}
 			Class<? extends Table> klaas = this.getClass();
-			Cursor cursor = db.query(klaas.getSimpleName(), getColumns(), "WHERE id=" + _id, null, null, null, null);
+			Cursor cursor = db.query(klaas.getSimpleName(), getColumns(), PRIMARY_KEY + EQUAL + _id, null, null, null,
+				null);
 			return fill(cursor);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -109,7 +115,7 @@ public abstract class Table {
 			if (_id == null) {
 				return false;
 			}
-			return db.delete(this.getClass().getSimpleName(), "WHERE id=" + _id, null) > 0;
+			return db.delete(this.getClass().getSimpleName(), PRIMARY_KEY + EQUAL + _id, null) > 0;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
