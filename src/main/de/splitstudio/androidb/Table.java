@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import de.splitstudio.androidb.annotation.Column;
@@ -12,7 +13,7 @@ import de.splitstudio.androidb.annotation.ColumnHelper;
 
 public abstract class Table {
 
-	public static final String PRIMARY_KEY = "id";
+	public static final String PRIMARY_KEY = "_id";
 
 	public static final String SQL_UPDATE = "UPDATE %s SET %s WHERE id='%s'";
 
@@ -30,24 +31,38 @@ public abstract class Table {
 
 	private final SQLiteDatabase db;
 
-	public Table(final SQLiteDatabase db) {
+	public Table(final Context context) {
+		db = (SQLiteDatabase.openOrCreateDatabase(context.getDatabasePath(context.getPackageName()), null));
+	}
+
+	/**
+	 * Constructor for easier testing.
+	 * 
+	 * @param db
+	 */
+	Table(final SQLiteDatabase db) {
 		this.db = db;
 	}
 
 	@Column(primaryKey = true, autoIncrement = true, notNull = true)
-	protected Long id = null;
+	protected Long _id = null;
 
 	public boolean isNew() {
-		return id == null;
+		return _id == null;
+	}
+
+	public Cursor all() {
+		Cursor cursor = db.query(this.getClass().getSimpleName(), getColumns(), null, null, null, null, null);
+		return cursor;
 	}
 
 	public boolean find() {
 		try {
-			if (id == null) {
+			if (_id == null) {
 				return false;
 			}
 			Class<? extends Table> klaas = this.getClass();
-			Cursor cursor = db.query(klaas.getSimpleName(), getColumns(), "WHERE id='" + id + "'", null, null, null,
+			Cursor cursor = db.query(klaas.getSimpleName(), getColumns(), "WHERE id='" + _id + "'", null, null, null,
 				null);
 			return fill(cursor);
 		} catch (Exception e) {
@@ -102,10 +117,10 @@ public abstract class Table {
 
 	public boolean delete() {
 		try {
-			if (id == null) {
+			if (_id == null) {
 				return false;
 			}
-			return db.delete(this.getClass().getSimpleName(), "WHERE id='" + id + "'", null) > 0;
+			return db.delete(this.getClass().getSimpleName(), "WHERE id='" + _id + "'", null) > 0;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -145,7 +160,7 @@ public abstract class Table {
 		StringBuilder updateValues = new StringBuilder();
 
 		try {
-			if (id == null) {
+			if (_id == null) {
 				return false;
 			}
 
@@ -161,7 +176,7 @@ public abstract class Table {
 				}
 			}
 			trimLastDelimiter(updateValues);
-			db.execSQL(String.format(SQL_UPDATE, this.getClass().getSimpleName(), updateValues, id));
+			db.execSQL(String.format(SQL_UPDATE, this.getClass().getSimpleName(), updateValues, _id));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -233,6 +248,7 @@ public abstract class Table {
 	/**
 	 * @return All declared fields from the current class plus the {@link #PRIMARY_KEY} field from {@link Table}.
 	 */
+	//TODO: get all fields from superclasses to provide inheritance.
 	List<Field> getFields() {
 		List<Field> fields = new ArrayList<Field>();
 		try {
@@ -248,11 +264,11 @@ public abstract class Table {
 	 * @param id
 	 */
 	final void setId(final Long id) {
-		this.id = id;
+		this._id = id;
 	}
 
 	public final Long getId() {
-		return id;
+		return _id;
 	}
 
 }
