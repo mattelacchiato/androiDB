@@ -1,34 +1,6 @@
 =AndroiDB
 A Lightweight Database Library for Android.
 
-==Usage
-First, lets create a simple Object in our Android App:
-  public class Parent implements Table {
-      public Parent(final String name, final String nickname){
-        this.name = name;
-        this.nickname = nickname;
-      }
-      
-      
-      @Column(primaryKey = true, autoIncrement = true, notNull = true)
-      Integer id;
-      
-      @Column(notNull = true)
-      String name;
-      
-      @Column
-      String nickname;
-      
-      @Override
-      public boolean isNew() {
-        return id != null;
-      }
-  }      
-
-Each field, which should be saved in your DB needs the @Column-Annotation.
-Now, you can go on and save your Parents:
-
-  Base base = new Base(this, "family_db");
-  Parent mom = new Parent("Angela", "Angie");
-  base.save(mom);
+==Example Usage
+See http://github.com/mattelacchiato/androiDBExample for an example.
   
