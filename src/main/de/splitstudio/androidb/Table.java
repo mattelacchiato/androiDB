@@ -13,32 +13,62 @@ import android.database.sqlite.SQLiteDatabase;
 import de.splitstudio.androidb.annotation.Column;
 import de.splitstudio.androidb.annotation.ColumnHelper;
 
+/**
+ * {@link Table} is the superclass for your database objects. It provides all CRUD Methods {@link #save()},
+ * {@link #insert()}, {@link #delete()}, {@link #update()}, {@link #find()} and {@link #all()} to manipulate your object
+ * in the db. It holds the {@link #PRIMARY_KEY} to be able to manage all operations.
+ * 
+ * @author Matthias Brandt
+ * @since 2010
+ */
 public abstract class Table {
 
+	/** String represantation of the primary key. Don't define a field with the same name! */
 	public static final String PRIMARY_KEY = "_id";
 
+	/** SQL template for update */
 	public static final String SQL_UPDATE = "UPDATE %s SET %s WHERE " + PRIMARY_KEY + "=%s";
 
+	/** SQL template for insert */
 	public static final String SQL_INSERT = "INSERT INTO %s (%s) VALUES (%s)";
 
+	/** SQL template for table creation */
 	public static final String SQL_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS %s (%s)";
 
-	public static final String SPACE = " ";
+	private static final String SPACE = " ";
 
-	public static final String DELIMITER = ",";
+	private static final String DELIMITER = ",";
 
-	public static final String EQUAL = "=";
+	private static final String EQUAL = "=";
 
+	/** The database. Normally {@link Table} will create its own instance. */
 	private final SQLiteDatabase db;
 
+	/** Set to remember, which tables were already created. */
 	static final Set<String> createdTables = new HashSet<String>();
 
+	/**
+	 * Welcome! Just provide your context, so we can access the physical database file. We will create or open a new
+	 * database file, which is called entry of your package name. (e.g.: de.splitstudio.killerapp -&gt;
+	 * "killerapp.sqlite").<br/>
+	 * At last, it tries to create the table in the database ({@link #createIfNecessary()}), when it can't remember to
+	 * have this done yet (see {@link #createdTables}.
+	 * 
+	 * @param context the context to provide your packagename and path to your app folder on the device.
+	 */
 	public Table(final Context context) {
 		this(context, null);
 	}
 
+	/**
+	 * See {@link #Table(Context)}. Furthermore, you can provide the {@link #_id} for easier use with {@link #find()} or
+	 * {@link #delete()}.
+	 * 
+	 * @param context the context to provide your packagename and path to your app folder on the device.
+	 * @param _id the primary key. You should be careful to set the correct id!
+	 */
 	public Table(final Context context, final Long _id) {
-		//create or open db.
+		//create or open db. Sorry for this ugly stuff, but Java needs the constructor call as first entry.
 		this(context.openOrCreateDatabase(context.getPackageName().substring(context.getPackageName().lastIndexOf('.'))
 				.concat(".sqlite"), SQLiteDatabase.CREATE_IF_NECESSARY, null));
 		this._id = _id;
@@ -54,32 +84,71 @@ public abstract class Table {
 		createIfNecessary();
 	}
 
+	/** Teh omni-present primary key. NEVER overwrite this field!!! */
 	@Column(primaryKey = true, autoIncrement = true, notNull = true)
 	protected Long _id = null;
 
+	/**
+	 * Set a local private value. This should only be called from {@link Table} and is needed to provide read/write
+	 * access to your object's fields. Do you have a clou to get along without these methods? Please write an issue on
+	 * <a href="http://github.com/mattelacchiato/androidb">GitHub</a>. Thank you!
+	 * 
+	 * @param field the class field which should be accessed.
+	 * @param value the value which should be set.
+	 * @throws IllegalAccessException if you can't access your field. (Maybe because of setting it final)
+	 */
 	protected abstract void setValue(Field field, Object value) throws IllegalArgumentException, IllegalAccessException;
 
+	/**
+	 * Retrieve a local private value. This should only be called from {@link Table} and is needed to provide read/write
+	 * access to your object's fields. Do you have a clou to get along without these methods? Please write an issue on
+	 * <a href="http://github.com/mattelacchiato/androidb">GitHub</a>. Thank you!
+	 * 
+	 * @param field the class field which should be accessed.
+	 * @param value the value which should be retrieved.
+	 * @throws IllegalAccessException if you can't access your field. (Maybe because of setting it final)
+	 */
 	protected abstract Object getValue(Field field) throws IllegalArgumentException, IllegalAccessException;
 
+	/**
+	 * Checks if this Object was stored in the database.
+	 * 
+	 * @return <code>false</code> when it was stored in the db.
+	 */
 	public final boolean isNew() {
 		return _id == null;
 	}
 
+	/**
+	 * Retrieves the table name. It's always the simple name of your implementing class.
+	 * 
+	 * @return the table name.
+	 */
 	public String getTableName() {
 		return this.getClass().getSimpleName();
 	}
 
+	/**
+	 * Queries over all rows of this Table.
+	 * 
+	 * @return the Cursor of this db operation. When no rows were selected, the cursor is empty.
+	 */
 	public Cursor all() {
-		return db.query(this.getClass().getSimpleName(), getColumns(), null, null, null, null, null);
+		return db.query(getTableName(), getColumns(), null, null, null, null, null);
 	}
 
+	/**
+	 * Find a specific row in the table by it's primary key and fills this object. So, _id has to be set before you call
+	 * this.
+	 * 
+	 * @return <code>true</code>, when a single row was found and filled in this object.
+	 */
 	public boolean find() {
 		try {
 			if (_id == null) {
 				return false;
 			}
-			Cursor cursor = db.query(this.getClass().getSimpleName(), getColumns(), PRIMARY_KEY + EQUAL + _id, null,
-				null, null, null);
+			Cursor cursor = db.query(getTableName(), getColumns(), PRIMARY_KEY + EQUAL + _id, null, null, null, null);
 			return fill(cursor);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -87,20 +156,25 @@ public abstract class Table {
 		}
 	}
 
+	/**
+	 * Create a new row in the table and insert all values from this object.
+	 * 
+	 * @return <code>true</code> when we could save it successfully in the db.
+	 */
 	public boolean insert() {
 		StringBuilder columns = new StringBuilder();
 		StringBuilder values = new StringBuilder();
 
 		try {
 			for (Field field : getFields()) {
-				if (isColumn(field)) {
+				if (ColumnHelper.isColumn(field)) {
 					columns.append(SPACE).append(field.getName()).append(DELIMITER);
 					values.append(SPACE).append(getValueQuotedIfNeeded(field)).append(DELIMITER);
 				}
 			}
 			trimLastDelimiter(columns);
 			trimLastDelimiter(values);
-			db.execSQL(String.format(SQL_INSERT, this.getClass().getSimpleName(), columns, values));
+			db.execSQL(String.format(SQL_INSERT, getTableName(), columns, values));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -109,18 +183,30 @@ public abstract class Table {
 		return true;
 	}
 
+	/**
+	 * Delete this object from the db. Though, _id has to be set to find the wanted row.
+	 * 
+	 * @return <code>true</code> when deletion was successful.
+	 */
 	public boolean delete() {
 		try {
 			if (_id == null) {
 				return false;
 			}
-			return db.delete(this.getClass().getSimpleName(), PRIMARY_KEY + EQUAL + _id, null) > 0;
+			return db.delete(getTableName(), PRIMARY_KEY + EQUAL + _id, null) > 0;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
 	}
 
+	/**
+	 * Update all values from this object in the db. Though, _id has to be set. Normally, when you call
+	 * {@link #update()}, you won't set this yourself. We would suggest to retrieve it via {@link #find()} and than
+	 * change the values you want.
+	 * 
+	 * @return <code>true</code>, when updating was successful.
+	 */
 	public boolean update() {
 		StringBuilder updateValues = new StringBuilder();
 
@@ -130,7 +216,7 @@ public abstract class Table {
 			}
 
 			for (Field field : getFields()) {
-				if (isColumn(field) && !isPrimaryKey(field)) {
+				if (ColumnHelper.isColumn(field) && !isPrimaryKey(field)) {
 					updateValues.append(field.getName());
 					updateValues.append(EQUAL);
 					updateValues.append(getValueQuotedIfNeeded(field));
@@ -139,7 +225,7 @@ public abstract class Table {
 				}
 			}
 			trimLastDelimiter(updateValues);
-			db.execSQL(String.format(SQL_UPDATE, this.getClass().getSimpleName(), updateValues, _id));
+			db.execSQL(String.format(SQL_UPDATE, getTableName(), updateValues, _id));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -147,6 +233,11 @@ public abstract class Table {
 		return true;
 	}
 
+	/**
+	 * {@link #insert()} or {@link #update()}.
+	 * 
+	 * @return <code>true</code> when operation was successful.
+	 */
 	public boolean save() {
 		if (isNew()) {
 			return insert();
@@ -154,6 +245,12 @@ public abstract class Table {
 		return update();
 	}
 
+	/**
+	 * Get the quoted value, when it's a String. Otherwise, the retrieved object will returned as it is.
+	 * 
+	 * @param field you want to access.
+	 * @return the quoted value, when it's a String. Otherwise, the retrieved object will returned as it is.
+	 */
 	private Object getValueQuotedIfNeeded(final Field field) throws IllegalArgumentException, IllegalAccessException {
 		Object value = getValue(field);
 		if (value == null) {
@@ -166,9 +263,15 @@ public abstract class Table {
 	}
 
 	private boolean isPrimaryKey(final Field field) {
-		return PRIMARY_KEY.equals(field.getName());
+		return field.getAnnotation(Column.class).primaryKey();
 	}
 
+	/**
+	 * When sb has a {@link #DELIMITER}, all chars from there to end will be deleted.
+	 * 
+	 * @param sb the StringBuffer to trim
+	 * @return the trimmed sb.
+	 */
 	private StringBuilder trimLastDelimiter(final StringBuilder sb) {
 		if (sb.lastIndexOf(DELIMITER) >= 0) {
 			return sb.delete(sb.lastIndexOf(DELIMITER), sb.length());
@@ -176,7 +279,13 @@ public abstract class Table {
 		return sb;
 	}
 
-	//this method *must* lay in this class to access protected fields!
+	/**
+	 * Reads the typed value from the cursor and set in into field. The db-type will be guessed by the field type.<br/>
+	 * This method *must* lay in this class to access the protected {@link #setValue(Field, Object)}.
+	 * 
+	 * @param c cursor pointing on its first and hopefully only entry.
+	 * @param field the field which should be filled.
+	 */
 	private void setTypedValue(final Cursor c, final Field field) throws IllegalArgumentException,
 			IllegalAccessException {
 		int index = c.getColumnIndex(field.getName());
@@ -201,14 +310,10 @@ public abstract class Table {
 		}
 	}
 
-	private boolean isColumn(final Field field) {
-		return field.getAnnotation(Column.class) != null;
-	}
-
 	private List<String> getColumnsAsList() {
 		List<String> columns = new ArrayList<String>();
 		for (Field field : getFields()) {
-			if (isColumn(field)) {
+			if (ColumnHelper.isColumn(field)) {
 				columns.add(field.getName());
 			}
 		}
@@ -233,19 +338,25 @@ public abstract class Table {
 		return fields;
 	}
 
+	/**
+	 * Get the primary key.
+	 * 
+	 * @return the of the row representing this object. <code>null</code>, when the object wasn't saved in the db, yet.
+	 */
 	public final Long getId() {
 		return _id;
 	}
 
-	/**
-	 * use only for testing!
-	 * 
-	 * @param id
-	 */
 	final void setId(final Long id) {
 		this._id = id;
 	}
 
+	/**
+	 * Fills the first entry the cursor into this object.
+	 * 
+	 * @param c the cursor containing all column's values.
+	 * @return <code>true</code>, when filling was successful.
+	 */
 	boolean fill(final Cursor c) {
 		if (!c.moveToFirst()) {
 			return false;
@@ -253,7 +364,7 @@ public abstract class Table {
 
 		try {
 			for (Field field : getFields()) {
-				if (isColumn(field)) {
+				if (ColumnHelper.isColumn(field)) {
 					setTypedValue(c, field);
 				}
 			}
@@ -265,6 +376,13 @@ public abstract class Table {
 		return true;
 	}
 
+	/**
+	 * Executes a {@link #SQL_CREATE_TABLE}, when we can't remember to have this done yet (see {@link #createdTables}.
+	 * Afterwards, this table will be added to {@link #createdTables}.
+	 * 
+	 * @return <code>true</code>, when it was already created, or it the {@link #SQL_CREATE_TABLE} execution was
+	 *         successful.
+	 */
 	//TODO: do versioning in table!
 	boolean createIfNecessary() {
 		StringBuilder sqlColumns = new StringBuilder();
@@ -276,7 +394,7 @@ public abstract class Table {
 
 		try {
 			for (Field field : getFields()) {
-				if (isColumn(field)) {
+				if (ColumnHelper.isColumn(field)) {
 					sqlColumns.append(SPACE);
 					sqlColumns.append(field.getName());
 					sqlColumns.append(SPACE);

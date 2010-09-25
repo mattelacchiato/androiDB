@@ -6,6 +6,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+/**
+ * Annotation to indicate that the annotated field should represent a row in the db. Containing some constraints for
+ * SQLite.
+ * 
+ * @author Matthias Brandt
+ * @since 2010
+ */
 @Target( { FIELD })
 @Retention(value = RUNTIME)
 public @interface Column {

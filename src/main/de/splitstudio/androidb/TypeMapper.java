@@ -1,5 +1,11 @@
 package de.splitstudio.androidb;
 
+/**
+ * Maps {@link java.lang.reflect.Field}'s type to SQL types.
+ * 
+ * @author Matthias Brandt
+ * @since 2010
+ */
 public class TypeMapper {
 
 	public static final String BLOB = "BLOB";
@@ -17,7 +23,7 @@ public class TypeMapper {
 			return NULL;
 		}
 		if (type.equals(Long.class) || type.equals(Integer.class) || type.equals(Short.class)
-				|| type.equals(Byte.class) || type.isInstance(Long.class) || type.equals(int.class)
+				|| type.equals(Byte.class) || type.equals(Long.class) || type.equals(int.class)
 				|| type.equals(short.class) || type.equals(byte.class) || type.equals(long.class)) {
 			return INTEGER;
 		}
