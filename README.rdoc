@@ -3,4 +3,6 @@ A Lightweight Database Library for Android.
 
 ==Example Usage
 See http://github.com/mattelacchiato/androiDBExample for an example.
-  
+
+=== tags ===
+Android, db, database, sql, sqlite, orm, or-mapper, hibernate, framework, libary, androiddb
