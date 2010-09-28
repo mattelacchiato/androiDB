@@ -10,6 +10,7 @@ import java.util.Set;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import de.splitstudio.androidb.annotation.Column;
 import de.splitstudio.androidb.annotation.ColumnHelper;
 
@@ -116,7 +117,7 @@ public abstract class Table {
 	 * @return <code>false</code> when it was stored in the db.
 	 */
 	public final boolean isNew() {
-		return _id == null;
+		return _id == null || _id < 0;
 	}
 
 	/**
@@ -149,7 +150,7 @@ public abstract class Table {
 				return false;
 			}
 			Cursor cursor = db.query(getTableName(), getColumns(), PRIMARY_KEY + EQUAL + _id, null, null, null, null);
-			return fill(cursor);
+			return fillFirst(cursor);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -174,13 +175,18 @@ public abstract class Table {
 			}
 			trimLastDelimiter(columns);
 			trimLastDelimiter(values);
-			db.execSQL(String.format(SQL_INSERT, getTableName(), columns, values));
+			SQLiteStatement statement = db.compileStatement(String.format(SQL_INSERT, getTableName(), columns, values));
+			Long id = statement.executeInsert();
+			if (id >= 0) {
+				_id = id;
+				return true;
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
 
-		return true;
+		return false;
 	}
 
 	/**
@@ -357,7 +363,7 @@ public abstract class Table {
 	 * @param c the cursor containing all column's values.
 	 * @return <code>true</code>, when filling was successful.
 	 */
-	boolean fill(final Cursor c) {
+	boolean fillFirst(final Cursor c) {
 		if (!c.moveToFirst()) {
 			return false;
 		}
