@@ -4,5 +4,8 @@ A Lightweight Database Library for Android.
 ==Example Usage
 See http://github.com/mattelacchiato/androiDBExample for an example.
 
+==Blogpost
+At http://www.blaulabs.de/2010/09/forschungswoche-androidb/ you can find a german blogpost about this project.
+
 === tags
 Android, db, database, sql, sqlite, orm, or-mapper, hibernate, framework, libary, androiddb
