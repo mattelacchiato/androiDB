@@ -1,7 +1,5 @@
 package de.splitstudio.androidb;
 
-import java.lang.reflect.Field;
-
 import android.database.sqlite.SQLiteDatabase;
 
 public class TableColumnWithAnnotations extends Table {
@@ -10,17 +8,6 @@ public class TableColumnWithAnnotations extends Table {
 
 	public TableColumnWithAnnotations(final SQLiteDatabase db) {
 		super(db);
-	}
-
-	@Override
-	protected void setValue(final Field field, final Object value) throws IllegalArgumentException,
-			IllegalAccessException {
-		field.set(this, value);
-	}
-
-	@Override
-	protected Object getValue(final Field field) throws IllegalArgumentException, IllegalAccessException {
-		return field.get(this);
 	}
 
 }

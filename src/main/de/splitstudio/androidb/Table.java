@@ -90,28 +90,6 @@ public abstract class Table {
 	protected Long _id = null;
 
 	/**
-	 * Set a local private value. This should only be called from {@link Table} and is needed to provide read/write
-	 * access to your object's fields. Do you have a clou to get along without these methods? Please write an issue on
-	 * <a href="http://github.com/mattelacchiato/androidb">GitHub</a>. Thank you!
-	 * 
-	 * @param field the class field which should be accessed.
-	 * @param value the value which should be set.
-	 * @throws IllegalAccessException if you can't access your field. (Maybe because of setting it final)
-	 */
-	protected abstract void setValue(Field field, Object value) throws IllegalArgumentException, IllegalAccessException;
-
-	/**
-	 * Retrieve a local private value. This should only be called from {@link Table} and is needed to provide read/write
-	 * access to your object's fields. Do you have a clou to get along without these methods? Please write an issue on
-	 * <a href="http://github.com/mattelacchiato/androidb">GitHub</a>. Thank you!
-	 * 
-	 * @param field the class field which should be accessed.
-	 * @param value the value which should be retrieved.
-	 * @throws IllegalAccessException if you can't access your field. (Maybe because of setting it final)
-	 */
-	protected abstract Object getValue(Field field) throws IllegalArgumentException, IllegalAccessException;
-
-	/**
 	 * Checks if this Object was stored in the database.
 	 * 
 	 * @return <code>false</code> when it was stored in the db.
@@ -258,7 +236,9 @@ public abstract class Table {
 	 * @return the quoted value, when it's a String. Otherwise, the retrieved object will returned as it is.
 	 */
 	private Object getValueQuotedIfNeeded(final Field field) throws IllegalArgumentException, IllegalAccessException {
-		Object value = getValue(field);
+		field.setAccessible(true);
+		Object value = field.get(this);
+
 		if (value == null) {
 			return value;
 		}
@@ -296,23 +276,24 @@ public abstract class Table {
 			IllegalAccessException {
 		int index = c.getColumnIndex(field.getName());
 		Class<?> type = field.getType();
+		field.setAccessible(true);
 
 		if (type.equals(long.class) || type.equals(Long.class)) {
-			setValue(field, c.getLong(index));
+			field.set(this, c.getLong(index));
 		} else if (type.equals(int.class) || type.equals(Integer.class)) {
-			setValue(field, c.getInt(index));
+			field.set(this, c.getInt(index));
 		} else if (type.equals(short.class) || type.equals(Short.class)) {
-			setValue(field, c.getShort(index));
+			field.set(this, c.getShort(index));
 		} else if (type.equals(byte.class) || type.equals(Byte.class)) {
-			setValue(field, (byte) c.getShort(index));
+			field.set(this, (byte) c.getShort(index));
 		} else if (type.equals(double.class) || type.equals(Double.class)) {
-			setValue(field, c.getDouble(index));
+			field.set(this, c.getDouble(index));
 		} else if (type.equals(float.class) || type.equals(Float.class)) {
-			setValue(field, c.getFloat(index));
+			field.set(this, c.getFloat(index));
 		} else if (type.equals(char.class)) {
-			setValue(field, (char) c.getShort(index));
+			field.set(this, (char) c.getShort(index));
 		} else if (type.equals(String.class)) {
-			setValue(field, c.getString(index));
+			field.set(this, c.getString(index));
 		}
 	}
 

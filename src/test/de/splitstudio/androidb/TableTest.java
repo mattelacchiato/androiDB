@@ -106,8 +106,8 @@ public class TableTest {
 		Table.createdTables.add(TableMultipleColumnsAnnotated.class.getSimpleName());
 		TableMultipleColumnsAnnotated table = new TableMultipleColumnsAnnotated(db);
 		table.setId(42L);
-		table.amount = 3.14f;
-		table.text = "foo";
+		table.setAmount(3.14f);
+		table.setText("foo");
 		db.execSQL("UPDATE TableMultipleColumnsAnnotated SET text='foo', amount=3.14 WHERE _id=42");
 		EasyMock.expectLastCall();
 

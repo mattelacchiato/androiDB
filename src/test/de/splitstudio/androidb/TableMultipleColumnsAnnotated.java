@@ -1,7 +1,5 @@
 package de.splitstudio.androidb;
 
-import java.lang.reflect.Field;
-
 import android.database.sqlite.SQLiteDatabase;
 import de.splitstudio.androidb.annotation.Column;
 
@@ -15,20 +13,17 @@ public class TableMultipleColumnsAnnotated extends Table {
 			+ " ( _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, text TEXT, amount REAL)";
 
 	@Column
-	protected String text;
+	private String text;
 
 	@Column
-	protected float amount;
+	private float amount;
 
-	@Override
-	protected void setValue(final Field field, final Object value) throws IllegalArgumentException,
-			IllegalAccessException {
-		field.set(this, value);
+	public void setAmount(final float f) {
+		amount = f;
 	}
 
-	@Override
-	protected Object getValue(final Field field) throws IllegalArgumentException, IllegalAccessException {
-		return field.get(this);
+	public void setText(final String string) {
+		text = string;
 	}
 
 }
