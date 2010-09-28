@@ -5,7 +5,7 @@ import java.lang.reflect.Field;
 import android.database.Cursor;
 
 /**
- * Maps {@link java.lang.reflect.Field}'s type to SQL types.
+ * Maps {@link java.lang.reflect.Field}'s type to SQL types and vice versa.
  * 
  * @author Matthias Brandt
  * @since 2010
@@ -47,6 +47,7 @@ public class TypeMapper {
 	 * This method *must* lay in this class to access the protected {@link #setValue(Field, Object)}.
 	 * 
 	 * @param c cursor pointing on its first and hopefully only entry.
+	 * @param table the table, which's field should be set.
 	 * @param field the field which should be filled.
 	 */
 	public static void setTypedValue(final Cursor c, final Table table, final Field field)
