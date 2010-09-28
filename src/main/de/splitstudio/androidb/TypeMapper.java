@@ -1,5 +1,9 @@
 package de.splitstudio.androidb;
 
+import java.lang.reflect.Field;
+
+import android.database.Cursor;
+
 /**
  * Maps {@link java.lang.reflect.Field}'s type to SQL types.
  * 
@@ -36,6 +40,38 @@ public class TypeMapper {
 		}
 
 		return BLOB;
+	}
+
+	/**
+	 * Reads the typed value from the cursor and set in into field. The db-type will be guessed by the field type.<br/>
+	 * This method *must* lay in this class to access the protected {@link #setValue(Field, Object)}.
+	 * 
+	 * @param c cursor pointing on its first and hopefully only entry.
+	 * @param field the field which should be filled.
+	 */
+	public static void setTypedValue(final Cursor c, final Table table, final Field field)
+			throws IllegalArgumentException, IllegalAccessException {
+		int index = c.getColumnIndex(field.getName());
+		Class<?> type = field.getType();
+		field.setAccessible(true);
+
+		if (type.equals(long.class) || type.equals(Long.class)) {
+			field.set(table, c.getLong(index));
+		} else if (type.equals(int.class) || type.equals(Integer.class)) {
+			field.set(table, c.getInt(index));
+		} else if (type.equals(short.class) || type.equals(Short.class)) {
+			field.set(table, c.getShort(index));
+		} else if (type.equals(byte.class) || type.equals(Byte.class)) {
+			field.set(table, (byte) c.getShort(index));
+		} else if (type.equals(double.class) || type.equals(Double.class)) {
+			field.set(table, c.getDouble(index));
+		} else if (type.equals(float.class) || type.equals(Float.class)) {
+			field.set(table, c.getFloat(index));
+		} else if (type.equals(char.class)) {
+			field.set(table, (char) c.getShort(index));
+		} else if (type.equals(String.class)) {
+			field.set(table, c.getString(index));
+		}
 	}
 
 }

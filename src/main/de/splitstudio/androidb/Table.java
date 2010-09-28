@@ -265,38 +265,6 @@ public abstract class Table {
 		return sb;
 	}
 
-	/**
-	 * Reads the typed value from the cursor and set in into field. The db-type will be guessed by the field type.<br/>
-	 * This method *must* lay in this class to access the protected {@link #setValue(Field, Object)}.
-	 * 
-	 * @param c cursor pointing on its first and hopefully only entry.
-	 * @param field the field which should be filled.
-	 */
-	private void setTypedValue(final Cursor c, final Field field) throws IllegalArgumentException,
-			IllegalAccessException {
-		int index = c.getColumnIndex(field.getName());
-		Class<?> type = field.getType();
-		field.setAccessible(true);
-
-		if (type.equals(long.class) || type.equals(Long.class)) {
-			field.set(this, c.getLong(index));
-		} else if (type.equals(int.class) || type.equals(Integer.class)) {
-			field.set(this, c.getInt(index));
-		} else if (type.equals(short.class) || type.equals(Short.class)) {
-			field.set(this, c.getShort(index));
-		} else if (type.equals(byte.class) || type.equals(Byte.class)) {
-			field.set(this, (byte) c.getShort(index));
-		} else if (type.equals(double.class) || type.equals(Double.class)) {
-			field.set(this, c.getDouble(index));
-		} else if (type.equals(float.class) || type.equals(Float.class)) {
-			field.set(this, c.getFloat(index));
-		} else if (type.equals(char.class)) {
-			field.set(this, (char) c.getShort(index));
-		} else if (type.equals(String.class)) {
-			field.set(this, c.getString(index));
-		}
-	}
-
 	private List<String> getColumnsAsList() {
 		List<String> columns = new ArrayList<String>();
 		for (Field field : getFields()) {
@@ -352,7 +320,7 @@ public abstract class Table {
 		try {
 			for (Field field : getFields()) {
 				if (ColumnHelper.isColumn(field)) {
-					setTypedValue(c, field);
+					TypeMapper.setTypedValue(c, this, field);
 				}
 			}
 		} catch (Exception e) {
