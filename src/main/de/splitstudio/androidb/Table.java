@@ -263,7 +263,8 @@ public abstract class Table {
 	}
 
 	private boolean isPrimaryKey(final Field field) {
-		return field.getAnnotation(Column.class).primaryKey();
+		Column column = field.getAnnotation(Column.class);
+    return column != null && column.primaryKey();
 	}
 
 	/**
