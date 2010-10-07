@@ -1,8 +1,11 @@
 package de.splitstudio.androidb;
 
+import static org.easymock.EasyMock.aryEq;
 import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.isNull;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -179,15 +182,15 @@ public class TableTest {
 
 	@Test
 	public void find_withId_executesCorrectSQLAndReturnTrue() {
+		Table.createdTables.add(TableColumnWithAnnotations.class.getSimpleName());
 		Table table = new TableColumnWithAnnotations(db);
 		String tableName = TableColumnWithAnnotations.class.getSimpleName();
 		Long id = 42L;
 		table._id = id;
 
-		expect(db.query(tableName, new String[] { "_id" }, "_id=" + id, null, null, null, null)).andReturn(cursor);
-		db.execSQL(TableColumnWithAnnotations.SQL);
-		expectLastCall();
-
+		expect(
+			db.query(eq(tableName), aryEq(new String[] { "_id" }), eq("_id=" + id), isNull(String[].class),
+				isNull(String.class), isNull(String.class), isNull(String.class))).andReturn(cursor);
 		expect(cursor.moveToFirst()).andReturn(true);
 		expect(cursor.getColumnIndex("_id")).andReturn(0);
 		expect(cursor.getLong(0)).andReturn(id);
