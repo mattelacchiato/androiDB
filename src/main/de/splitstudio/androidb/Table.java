@@ -135,6 +135,20 @@ public abstract class Table {
 		}
 	}
 
+	public boolean find(final Long id) {
+		try {
+			if (id == null) {
+				return false;
+			}
+			_id = id;
+			Cursor cursor = db.query(getTableName(), getColumns(), PRIMARY_KEY + EQUAL + _id, null, null, null, null);
+			return fillFirst(cursor);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	/**
 	 * Create a new row in the table and insert all values from this object.
 	 * 

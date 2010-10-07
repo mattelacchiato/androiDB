@@ -1,6 +1,8 @@
 package de.splitstudio.androidb;
 
 import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -137,7 +139,7 @@ public class TableTest {
 		TableMultipleColumnsAnnotated table = new TableMultipleColumnsAnnotated(db);
 		table.setId(42L);
 		db.execSQL("UPDATE TableMultipleColumnsAnnotated SET text=null, amount=0.0 WHERE _id=42");
-		EasyMock.expectLastCall();
+		expectLastCall();
 
 		replay(mocks);
 		boolean result = table.save();
@@ -169,4 +171,29 @@ public class TableTest {
 		assertThat(table.getColumns(), equalTo(new String[] { "_id" }));
 	}
 
+	@Test
+	public void find_withoutParameterAndId_returnsFalse() {
+		Table table = new TableColumnWithAnnotations(db);
+		assertThat(table.find(), equalTo(false));
+	}
+
+	@Test
+	public void find_withId_executesCorrectSQLAndReturnTrue() {
+		Table table = new TableColumnWithAnnotations(db);
+		String tableName = TableColumnWithAnnotations.class.getSimpleName();
+		Long id = 42L;
+		table._id = id;
+
+		expect(db.query(tableName, new String[] { "_id" }, "_id=" + id, null, null, null, null)).andReturn(cursor);
+		db.execSQL(TableColumnWithAnnotations.SQL);
+		expectLastCall();
+
+		expect(cursor.moveToFirst()).andReturn(true);
+		expect(cursor.getColumnIndex("_id")).andReturn(0);
+		expect(cursor.getLong(0)).andReturn(id);
+
+		replay(mocks);
+		assertThat(table.find(), equalTo(true));
+		verify(mocks);
+	}
 }
