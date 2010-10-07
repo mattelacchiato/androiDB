@@ -136,17 +136,8 @@ public abstract class Table {
 	}
 
 	public boolean find(final Long id) {
-		try {
-			if (id == null) {
-				return false;
-			}
-			_id = id;
-			Cursor cursor = db.query(getTableName(), getColumns(), PRIMARY_KEY + EQUAL + _id, null, null, null, null);
-			return fillFirst(cursor);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
+		_id = id;
+		return find();
 	}
 
 	/**
@@ -264,7 +255,7 @@ public abstract class Table {
 
 	private boolean isPrimaryKey(final Field field) {
 		Column column = field.getAnnotation(Column.class);
-    return column != null && column.primaryKey();
+		return column != null && column.primaryKey();
 	}
 
 	/**
