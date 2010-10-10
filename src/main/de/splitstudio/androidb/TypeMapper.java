@@ -16,6 +16,7 @@
 package de.splitstudio.androidb;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 
 import android.database.Cursor;
 
@@ -57,37 +58,26 @@ public class TypeMapper {
 		return BLOB;
 	}
 
-	/**
-	 * Reads the typed value from the cursor and set in into field. The db-type will be guessed by the field type.<br/>
-	 * This method *must* lay in this class to access the protected {@link #setValue(Field, Object)}.
-	 * 
-	 * @param c cursor pointing on its first and hopefully only entry.
-	 * @param table the table, which's field should be set.
-	 * @param field the field which should be filled.
-	 */
-	public static void setTypedValue(final Cursor c, final Table table, final Field field)
-			throws IllegalArgumentException, IllegalAccessException {
-		int index = c.getColumnIndex(field.getName());
-		Class<?> type = field.getType();
-		field.setAccessible(true);
-
+	public static Object getTypedValue(final Cursor cursor, final Field field) {
+		int index = cursor.getColumnIndex(field.getName());
+		Type type = field.getType();
 		if (type.equals(long.class) || type.equals(Long.class)) {
-			field.set(table, c.getLong(index));
+			return cursor.getLong(index);
 		} else if (type.equals(int.class) || type.equals(Integer.class)) {
-			field.set(table, c.getInt(index));
+			return cursor.getInt(index);
 		} else if (type.equals(short.class) || type.equals(Short.class)) {
-			field.set(table, c.getShort(index));
+			return cursor.getShort(index);
 		} else if (type.equals(byte.class) || type.equals(Byte.class)) {
-			field.set(table, (byte) c.getShort(index));
+			return (byte) cursor.getShort(index);
 		} else if (type.equals(double.class) || type.equals(Double.class)) {
-			field.set(table, c.getDouble(index));
+			return cursor.getDouble(index);
 		} else if (type.equals(float.class) || type.equals(Float.class)) {
-			field.set(table, c.getFloat(index));
+			return cursor.getFloat(index);
 		} else if (type.equals(char.class)) {
-			field.set(table, (char) c.getShort(index));
+			return (char) cursor.getShort(index);
 		} else if (type.equals(String.class)) {
-			field.set(table, c.getString(index));
+			return cursor.getString(index);
 		}
+		return null;
 	}
-
 }

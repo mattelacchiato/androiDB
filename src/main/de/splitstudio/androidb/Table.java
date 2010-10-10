@@ -128,7 +128,7 @@ public abstract class Table {
 	 * @return the Cursor of this db operation. When no rows were selected, the cursor is empty.
 	 */
 	public Cursor all() {
-		return db.query(getTableName(), getColumns(), null, null, null, null, null);
+		return db.query(getTableName(), getColumnNames(), null, null, null, null, null);
 	}
 
 	/**
@@ -142,7 +142,8 @@ public abstract class Table {
 			if (_id == null || _id < 0) {
 				return false;
 			}
-			Cursor cursor = db.query(getTableName(), getColumns(), PRIMARY_KEY + EQUAL + _id, null, null, null, null);
+			Cursor cursor = db.query(getTableName(), getColumnNames(), PRIMARY_KEY + EQUAL + _id, null, null, null,
+				null);
 			return fillFirst(cursor);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -293,7 +294,7 @@ public abstract class Table {
 		return sb;
 	}
 
-	private List<String> getColumnsAsList() {
+	private List<String> getColumnNamesAsList() {
 		List<String> columns = new ArrayList<String>();
 		for (Field field : getFields()) {
 			if (ColumnHelper.isColumn(field)) {
@@ -303,8 +304,8 @@ public abstract class Table {
 		return columns;
 	}
 
-	String[] getColumns() {
-		List<String> columns = getColumnsAsList();
+	String[] getColumnNames() {
+		List<String> columns = getColumnNamesAsList();
 		return columns.toArray(new String[columns.size()]);
 	}
 
@@ -348,7 +349,7 @@ public abstract class Table {
 		try {
 			for (Field field : getFields()) {
 				if (ColumnHelper.isColumn(field)) {
-					TypeMapper.setTypedValue(c, this, field);
+					setTypedValue(c, field);
 				}
 			}
 		} catch (Exception e) {
@@ -398,6 +399,12 @@ public abstract class Table {
 			return false;
 		}
 		return true;
+	}
+
+	private void setTypedValue(final Cursor c, final Field field) throws IllegalArgumentException,
+			IllegalAccessException {
+		field.setAccessible(true);
+		field.set(this, TypeMapper.getTypedValue(c, field));
 	}
 
 }

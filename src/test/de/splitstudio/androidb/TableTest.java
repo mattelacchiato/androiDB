@@ -185,7 +185,7 @@ public class TableTest {
 	@Test
 	public void getColumns_returnsAllAnnotatedColumns() {
 		Table table = new TableColumnWithAnnotations(db);
-		assertThat(table.getColumns(), equalTo(new String[] { "_id" }));
+		assertThat(table.getColumnNames(), equalTo(new String[] { "_id" }));
 	}
 
 	@Test

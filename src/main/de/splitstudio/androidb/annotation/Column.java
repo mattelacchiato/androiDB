@@ -38,6 +38,8 @@ public @interface Column {
 
 	boolean primaryKey() default false;
 
+	int viewId() default -1;
+
 	/**
 	 * Foreign Keys are only available in SQLite 3.6.19, which was first used in Android 2.2 (API-Level 8).
 	 * 
