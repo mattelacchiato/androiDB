@@ -180,6 +180,18 @@ public class TableTest {
 	}
 
 	@Test
+	public void find_null_returnsFalse() {
+		Table table = new TableColumnWithAnnotations(db);
+		assertThat(table.find(null), equalTo(false));
+	}
+
+	@Test
+	public void find_lessThanZero_returnsFalse() {
+		Table table = new TableColumnWithAnnotations(db);
+		assertThat(table.find(-1L), equalTo(false));
+	}
+
+	@Test
 	public void find_withId_executesCorrectSQLAndReturnTrue() {
 		Table.createdTables.add(TableColumnWithAnnotations.class.getSimpleName());
 		Table table = new TableColumnWithAnnotations(db);
@@ -190,12 +202,33 @@ public class TableTest {
 		expect(
 			db.query(eq(tableName), aryEq(new String[] { "_id" }), eq("_id=" + id), isNull(String[].class),
 				isNull(String.class), isNull(String.class), isNull(String.class))).andReturn(cursor);
-		expect(cursor.moveToFirst()).andReturn(true);
-		expect(cursor.getColumnIndex("_id")).andReturn(0);
-		expect(cursor.getLong(0)).andReturn(id);
+		expectCursorQuery(id);
 
 		replay(mocks);
 		assertThat(table.find(), equalTo(true));
 		verify(mocks);
+	}
+
+	@Test
+	public void find_withIdAsParameter_executesCorrectSQLAndReturnTrue() {
+		Table.createdTables.add(TableColumnWithAnnotations.class.getSimpleName());
+		Table table = new TableColumnWithAnnotations(db);
+		String tableName = TableColumnWithAnnotations.class.getSimpleName();
+		Long id = 42L;
+
+		expect(
+			db.query(eq(tableName), aryEq(new String[] { "_id" }), eq("_id=" + id), isNull(String[].class),
+				isNull(String.class), isNull(String.class), isNull(String.class))).andReturn(cursor);
+		expectCursorQuery(id);
+
+		replay(mocks);
+		assertThat(table.find(id), equalTo(true));
+		verify(mocks);
+	}
+
+	private void expectCursorQuery(final Long returnId) {
+		expect(cursor.moveToFirst()).andReturn(true);
+		expect(cursor.getColumnIndex("_id")).andReturn(0);
+		expect(cursor.getLong(0)).andReturn(returnId);
 	}
 }
