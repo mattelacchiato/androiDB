@@ -226,6 +226,18 @@ public class TableTest {
 		verify(mocks);
 	}
 
+	@Test
+	public void drop_executesCorrectSQL() {
+		Table.createdTables.add(TableColumnWithAnnotations.class.getSimpleName());
+		Table table = new TableColumnWithAnnotations(db);
+		db.execSQL("DROP TABLE IF EXISTS " + table.getClass().getSimpleName());
+		expectLastCall();
+
+		replay(mocks);
+		table.drop();
+		verify(mocks);
+	}
+
 	private void expectCursorQuery(final Long returnId) {
 		expect(cursor.moveToFirst()).andReturn(true);
 		expect(cursor.getColumnIndex("_id")).andReturn(0);

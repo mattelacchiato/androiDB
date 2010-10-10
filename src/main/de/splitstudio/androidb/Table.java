@@ -235,6 +235,13 @@ public abstract class Table {
 	}
 
 	/**
+	 * DROP TABLE IF EXISTS.
+	 */
+	public void drop() {
+		db.execSQL("DROP TABLE IF EXISTS " + getTableName());
+	}
+
+	/**
 	 * Get the quoted value, when it's a String. Otherwise, the retrieved object will returned as it is.
 	 * 
 	 * @param field you want to access.
