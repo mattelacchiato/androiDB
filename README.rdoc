@@ -1,6 +1,11 @@
 =AndroiDB
 A Lightweight Database Library for Android.
 
+==Installation
+Fetch the code and import it as Eclipse project. Than include it in your own Android project (Project Properties -> Java Build Path -> Projects -> Add...).
+A user-friendly jar in two versions (dex compiled and sun-java compatible) is planned for the first release.
+
+
 ==Example Usage
 See http://github.com/mattelacchiato/androiDBExample for an example.
 
