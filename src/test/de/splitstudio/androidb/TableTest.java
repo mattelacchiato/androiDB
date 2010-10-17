@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.isA;
 import static org.easymock.EasyMock.isNull;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
@@ -56,9 +57,23 @@ public class TableTest {
 	}
 
 	@Test
-	public void createTable_allAnnotions_executeCorrectSql() {
+	public void createTable_allAnnotions_executeCorrectSqlAndMetadata() {
 		db.execSQL(TableColumnWithAnnotations.SQL);
 		expectLastCall();
+		db.execSQL(Metadata.SQL);
+		expectLastCall();
+		expect(
+			db.query(eq("Metadata"), aryEq(new String[] { "_id", "version", "table" }), isA(String.class),
+				isNull(String[].class), isNull(String.class), isNull(String.class), isNull(String.class))).andReturn(
+			cursor);
+		expect(cursor.moveToFirst()).andReturn(true);
+		expect(cursor.getColumnIndex("_id")).andReturn(0);
+		expect(cursor.getColumnIndex("version")).andReturn(1);
+		expect(cursor.getColumnIndex("table")).andReturn(2);
+		expect(cursor.getLong(0)).andReturn(2L);
+		expect(cursor.getInt(1)).andReturn(1);
+		expect(cursor.getString(2)).andReturn("Metadata");
+		expectDrop(TableColumnWithAnnotations.class.getSimpleName());
 
 		replay(mocks);
 		new TableColumnWithAnnotations(db);
@@ -245,12 +260,16 @@ public class TableTest {
 	public void drop_executesCorrectSQL() {
 		Table.createdTables.add(TableColumnWithAnnotations.class.getSimpleName());
 		Table table = new TableColumnWithAnnotations(db);
-		db.execSQL("DROP TABLE IF EXISTS " + table.getClass().getSimpleName());
-		expectLastCall();
+		expectDrop(table.getClass().getSimpleName());
 
 		replay(mocks);
 		table.drop();
 		verify(mocks);
+	}
+
+	private void expectDrop(final String tableName) {
+		db.execSQL("DROP TABLE IF EXISTS " + tableName);
+		expectLastCall();
 	}
 
 	private void expectCursorQuery(final Long returnId) {

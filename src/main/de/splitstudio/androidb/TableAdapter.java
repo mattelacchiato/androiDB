@@ -32,8 +32,9 @@ public class TableAdapter extends CursorAdapter {
 				Column column = field.getAnnotation(Column.class);
 				if (column != null && column.viewId() >= 0) {
 					try {
-						String value = (String) TypeMapper.getTypedValue(cursor, field);
-						((TextView) view.findViewById(column.viewId())).setText(value);
+						String value = TypeMapper.getValueAsString(cursor, field);
+						TextView textView = (TextView) view.findViewById(column.viewId());
+						textView.setText(value);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

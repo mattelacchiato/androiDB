@@ -28,6 +28,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import de.splitstudio.androidb.annotation.Column;
 import de.splitstudio.androidb.annotation.ColumnHelper;
+import de.splitstudio.androidb.annotation.TableMetaData;
 
 /**
  * {@link Table} is the superclass for your database objects. It provides all CRUD Methods {@link #save()},
@@ -58,7 +59,7 @@ public abstract class Table {
 	private static final String EQUAL = "=";
 
 	/** The database. Normally {@link Table} will create its own instance. */
-	private final SQLiteDatabase db;
+	protected final SQLiteDatabase db;
 
 	/** Set to remember, which tables were already created. */
 	static final Set<String> createdTables = new HashSet<String>();
@@ -95,9 +96,28 @@ public abstract class Table {
 	 * 
 	 * @param db
 	 */
+	/* ...able to test*/
 	Table(final SQLiteDatabase db) {
 		this.db = db;
 		createIfNecessary();
+		handleUpgrade();
+	}
+
+	private void handleUpgrade() {
+		if (getClass().equals(Metadata.class)) {
+			return;
+		}
+
+		TableMetaData metaData = getClass().getAnnotation(TableMetaData.class);
+		if (metaData == null) {
+			throw new IllegalStateException("Table " + getTableName() + " has to declare a version!");
+		}
+
+		int newVersion = metaData.version();
+		Metadata metaTable = new Metadata(db);
+		if (metaTable.findByName(getTableName())) {
+			onUpgrade(metaTable.getVersion(), newVersion);
+		}
 	}
 
 	/** Teh omni-present primary key. NEVER overwrite this field!!! */
@@ -399,6 +419,10 @@ public abstract class Table {
 			return false;
 		}
 		return true;
+	}
+
+	protected void onUpgrade(final int fromVersion, final int toVersion) {
+		drop();
 	}
 
 	private void setTypedValue(final Cursor c, final Field field) throws IllegalArgumentException,

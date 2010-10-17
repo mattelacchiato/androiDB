@@ -13,25 +13,24 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package de.splitstudio.androidb;
+package de.splitstudio.androidb.annotation;
 
-import android.database.sqlite.SQLiteDatabase;
-import de.splitstudio.androidb.annotation.Column;
-import de.splitstudio.androidb.annotation.TableMetaData;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@TableMetaData(version = 1)
-public class TableMultipleColumns extends Table {
-	public TableMultipleColumns(final SQLiteDatabase db) {
-		super(db);
-	}
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-	public static final String SQL = "CREATE TABLE IF NOT EXISTS " + TableMultipleColumns.class.getSimpleName()
-			+ " ( _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, text TEXT, amount REAL)";
+/**
+ * Annotation to indicate that the annotated class have some metadata like view id or version.
+ * 
+ * @author Matthias Brandt
+ * @since 2010
+ */
+@Target( { TYPE })
+@Retention(value = RUNTIME)
+public @interface TableMetaData {
 
-	@Column
-	private String text;
-
-	@Column
-	private float amount;
+	int version();
 
 }

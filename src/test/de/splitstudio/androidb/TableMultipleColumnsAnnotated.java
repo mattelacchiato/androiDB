@@ -17,7 +17,9 @@ package de.splitstudio.androidb;
 
 import android.database.sqlite.SQLiteDatabase;
 import de.splitstudio.androidb.annotation.Column;
+import de.splitstudio.androidb.annotation.TableMetaData;
 
+@TableMetaData(version = 1)
 public class TableMultipleColumnsAnnotated extends Table {
 	public TableMultipleColumnsAnnotated(final SQLiteDatabase db) {
 		super(db);

@@ -16,7 +16,9 @@
 package de.splitstudio.androidb;
 
 import android.database.sqlite.SQLiteDatabase;
+import de.splitstudio.androidb.annotation.TableMetaData;
 
+@TableMetaData(version = 1)
 public class TableColumnWithAnnotations extends Table {
 
 	public static final String SQL = "CREATE TABLE IF NOT EXISTS TableColumnWithAnnotations ( _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)";

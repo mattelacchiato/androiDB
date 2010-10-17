@@ -58,6 +58,29 @@ public class TypeMapper {
 		return BLOB;
 	}
 
+	public static String getValueAsString(final Cursor cursor, final Field field) {
+		int index = cursor.getColumnIndex(field.getName());
+		Type type = field.getType();
+		if (type.equals(long.class) || type.equals(Long.class)) {
+			return String.valueOf(cursor.getLong(index));
+		} else if (type.equals(int.class) || type.equals(Integer.class)) {
+			return String.valueOf(cursor.getInt(index));
+		} else if (type.equals(short.class) || type.equals(Short.class)) {
+			return String.valueOf(cursor.getShort(index));
+		} else if (type.equals(byte.class) || type.equals(Byte.class)) {
+			return String.valueOf((byte) cursor.getShort(index));
+		} else if (type.equals(double.class) || type.equals(Double.class)) {
+			return String.valueOf(cursor.getDouble(index));
+		} else if (type.equals(float.class) || type.equals(Float.class)) {
+			return String.valueOf(cursor.getFloat(index));
+		} else if (type.equals(char.class)) {
+			return String.valueOf((char) cursor.getShort(index));
+		} else if (type.equals(String.class)) {
+			return String.valueOf(cursor.getString(index));
+		}
+		return "";
+	}
+
 	public static Object getTypedValue(final Cursor cursor, final Field field) {
 		int index = cursor.getColumnIndex(field.getName());
 		Type type = field.getType();
