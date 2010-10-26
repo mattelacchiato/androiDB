@@ -60,8 +60,13 @@ Don't use SQL reserved words as column names! I could quote all column names, bu
 
 
 ==Subprojects
+<<<<<<< HEAD
 * Example: http://github.com/mattelacchiato/androiDBExample
 * Tests: http://github.com/mattelacchiato/androiDBTest (depending on androiDBExample)
+=======
+*Example: http://github.com/mattelacchiato/androiDBExample
+*Tests: http://github.com/mattelacchiato/androiDBTest (depending on androiDBExample)
+>>>>>>> 791408af103756fa14ac9fb75090a60e19a2e4bb
 
 ==Information
 At http://www.blaulabs.de/2010/09/forschungswoche-androidb/ you can find a german blogpost about this project.
