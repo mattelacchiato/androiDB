@@ -141,7 +141,7 @@ public abstract class Table {
 	 * @return <code>false</code> when it was stored in the db.
 	 */
 	public final boolean isNew() {
-		return _id == null || _id < 0;
+		return _id == null || _id < 1L;
 	}
 
 	/**
@@ -207,7 +207,7 @@ public abstract class Table {
 			trimLastDelimiter(values);
 			SQLiteStatement statement = db.compileStatement(String.format(SQL_INSERT, getTableName(), columns, values));
 			Long id = statement.executeInsert();
-			if (id >= 0) {
+			if (id >= 0L) {
 				_id = id;
 				return true;
 			}
