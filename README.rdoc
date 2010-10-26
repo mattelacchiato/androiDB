@@ -31,7 +31,7 @@ This is alreade done by Table's "_id" Column.
 Now, you can call all CRUD-Method on Category:
  Table cat = new Category(getContext());
  cat.setBudget(42);
- cat.save();
+ cat.save(); //"update or insert"
 
  Table cat = new Category(getContext());
  cat.find(42);
@@ -56,8 +56,6 @@ Don't use SQL reserved words as column names! I could quote all column names, bu
  Error: near "table": syntax error
  sqlite> select 'table' from metadata;
  table
-
-
 
 ==Subprojects
 * Example: http://github.com/mattelacchiato/androiDBExample
