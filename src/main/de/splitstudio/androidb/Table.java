@@ -26,6 +26,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.util.Log;
 import de.splitstudio.androidb.annotation.Column;
 import de.splitstudio.androidb.annotation.ColumnHelper;
 import de.splitstudio.androidb.annotation.TableMetaData;
@@ -64,6 +65,11 @@ public abstract class Table {
 	/** Set to remember, which tables were already created. */
 	static final Set<String> createdTables = new HashSet<String>();
 
+	private static final String TAG = Table.class.getSimpleName();
+
+	/** The filename for the database. */
+	public static final String DB_FILENAME = "androidb.sqlite";
+
 	/**
 	 * Welcome! Just provide your context, so we can access the physical database file. We will create or open a new
 	 * database file, which is called entry of your package name. (e.g.: de.splitstudio.killerapp -&gt;
@@ -86,8 +92,7 @@ public abstract class Table {
 	 */
 	public Table(final Context context, final Long _id) {
 		//create or open db. Sorry for this ugly stuff, but Java needs the constructor call as first entry.
-		this(context.openOrCreateDatabase(context.getPackageName().substring(context.getPackageName().lastIndexOf('.'))
-				.concat(".sqlite"), SQLiteDatabase.CREATE_IF_NECESSARY, null));
+		this(context.openOrCreateDatabase(DB_FILENAME, SQLiteDatabase.CREATE_IF_NECESSARY, null));
 		this._id = _id;
 	}
 
@@ -103,20 +108,27 @@ public abstract class Table {
 		handleUpgrade();
 	}
 
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+		db.close();
+	}
+
 	private void handleUpgrade() {
 		if (getClass().equals(Metadata.class)) {
 			return;
 		}
 
-		TableMetaData metaData = getClass().getAnnotation(TableMetaData.class);
-		if (metaData == null) {
-			throw new IllegalStateException("Table " + getTableName() + " has to declare a version!");
-		}
-
-		int newVersion = metaData.version();
+		int newVersion = getVersion();
 		Metadata metaTable = new Metadata(db);
 		if (metaTable.findByName(getTableName())) {
 			onUpgrade(metaTable.getVersion(), newVersion);
+		} else {
+			metaTable.setTable(getTableName());
+			metaTable.setVersion(newVersion);
+			if (!metaTable.save()) {
+				throw new IllegalStateException("Could not create metadata for Table " + getTableName());
+			}
 		}
 	}
 
@@ -138,7 +150,7 @@ public abstract class Table {
 	 * 
 	 * @return the table name.
 	 */
-	public String getTableName() {
+	public final String getTableName() {
 		return this.getClass().getSimpleName();
 	}
 
@@ -386,7 +398,6 @@ public abstract class Table {
 	 * @return <code>true</code>, when it was already created, or it the {@link #SQL_CREATE_TABLE} execution was
 	 *         successful.
 	 */
-	//TODO: do versioning in table!
 	boolean createIfNecessary() {
 		StringBuilder sqlColumns = new StringBuilder();
 		String name = getTableName();
@@ -411,7 +422,12 @@ public abstract class Table {
 				}
 			}
 			trimLastDelimiter(sqlColumns);
-			db.execSQL(String.format(SQL_CREATE_TABLE, name, sqlColumns));
+			String sql = String.format(SQL_CREATE_TABLE, name, sqlColumns.toString());
+			Log.i(TAG, "Executing sql: " + sql);
+			db.beginTransaction();
+			db.execSQL(sql);
+			db.setTransactionSuccessful();
+			db.endTransaction();
 			createdTables.add(name);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -427,6 +443,18 @@ public abstract class Table {
 			IllegalAccessException {
 		field.setAccessible(true);
 		field.set(this, TypeMapper.getTypedValue(c, field));
+	}
+
+	public final int getVersion() {
+		TableMetaData metaData = getClass().getAnnotation(TableMetaData.class);
+		if (metaData == null) {
+			throw new IllegalStateException("Table " + getTableName() + " has to declare a version!");
+		}
+		if (metaData.version() < 1) {
+			throw new IllegalStateException("Tableversion of " + getTableName() + " has to be >=1 !");
+		}
+
+		return metaData.version();
 	}
 
 }
