@@ -31,12 +31,19 @@ class Metadata extends Table {
 		return tableVersion;
 	}
 
-	public void setTable(final String table) {
+	public Metadata setTable(final String table) {
 		this.tableName = table;
+		return this;
 	}
 
 	public String getTable() {
 		return tableName;
+	}
+
+	/*..able to test*/
+	Metadata setTableVersion(final int i) {
+		this.tableVersion = i;
+		return this;
 	}
 
 }
