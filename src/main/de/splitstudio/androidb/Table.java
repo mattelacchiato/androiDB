@@ -169,22 +169,20 @@ public abstract class Table {
 	 * @return <code>true</code>, when a single row was found and filled in this object.
 	 */
 	public boolean find() {
-		try {
-			if (_id == null || _id < 1L) {
-				return false;
-			}
-			Cursor cursor = db.query(getTableName(), getColumnNames(), PRIMARY_KEY + EQUAL + _id, null, null, null,
-				null);
-			return fillFirst(cursor);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
+		return find(_id);
 	}
 
 	public boolean find(final Long id) {
-		_id = id;
-		return find();
+		try {
+			if (id == null || id < 1L) {
+				return false;
+			}
+			Cursor cursor = db
+					.query(getTableName(), getColumnNames(), PRIMARY_KEY + EQUAL + id, null, null, null, null);
+			return fillFirst(cursor);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**
