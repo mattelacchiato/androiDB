@@ -201,8 +201,7 @@ public abstract class Table {
 				return true;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
+			throw new RuntimeException(e);
 		}
 
 		return false;
@@ -415,8 +414,7 @@ public abstract class Table {
 			db.execSQL(String.format(SQL_CREATE_TABLE, name, sqlColumns));
 			createdTables.add(name);
 		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
+			throw new RuntimeException(e);
 		}
 		return true;
 	}
