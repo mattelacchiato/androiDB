@@ -114,6 +114,7 @@ public abstract class Table {
 	}
 
 	private void handleUpgrade() {
+		//Metadata is unversioned.
 		if (getClass().equals(Metadata.class)) {
 			return;
 		}
@@ -121,13 +122,16 @@ public abstract class Table {
 		int newVersion = getVersion();
 		Metadata metaTable = new Metadata(db);
 		if (metaTable.findByName(getTableName())) {
-			onUpgrade(metaTable.getTableVersion(), newVersion);
+			int oldVersion = metaTable.getTableVersion();
+			if (oldVersion != newVersion) {
+				onUpgrade(oldVersion, newVersion);
+			}
 		} else {
 			metaTable.setTable(getTableName());
-			metaTable.setTableVersion(newVersion);
-			if (!metaTable.save()) {
-				throw new IllegalStateException("Could not create metadata for Table " + getTableName());
-			}
+		}
+		metaTable.setTableVersion(newVersion);
+		if (!metaTable.save()) {
+			throw new IllegalStateException("Could not save metadata for Table " + getTableName());
 		}
 	}
 
