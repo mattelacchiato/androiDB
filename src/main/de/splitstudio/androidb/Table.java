@@ -205,7 +205,9 @@ public abstract class Table {
 			}
 			trimLastDelimiter(columns);
 			trimLastDelimiter(values);
-			SQLiteStatement statement = db.compileStatement(String.format(SQL_INSERT, getTableName(), columns, values));
+			String sql = String.format(SQL_INSERT, getTableName(), columns, values);
+			Log.i(TAG, "Execute insert: " + sql);
+			SQLiteStatement statement = db.compileStatement(sql);
 			Long id = statement.executeInsert();
 			if (id >= 0L) {
 				_id = id;
