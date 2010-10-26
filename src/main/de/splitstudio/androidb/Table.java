@@ -435,10 +435,10 @@ public abstract class Table {
 
 	/**
 	 * You have to overwrite this method to fullfill your own upgrade handling. This method simply calls {@link #drop()}
-	 * .
+	 * . Maybe you want to handle quirks upgrades (when toVersion &lt; fromVersion)...
 	 * 
 	 * @param fromVersion Version of this table in DB.
-	 * @param toVersion Version of this table in current annotation {@link TableMetaData}
+	 * @param toVersion Version of this table in current annotation {@link TableMetaData}.
 	 */
 	protected void onUpgrade(final int fromVersion, final int toVersion) {
 		drop();
