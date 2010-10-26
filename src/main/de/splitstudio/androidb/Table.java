@@ -170,7 +170,7 @@ public abstract class Table {
 	 */
 	public boolean find() {
 		try {
-			if (_id == null || _id < 0) {
+			if (_id == null || _id < 1L) {
 				return false;
 			}
 			Cursor cursor = db.query(getTableName(), getColumnNames(), PRIMARY_KEY + EQUAL + _id, null, null, null,
