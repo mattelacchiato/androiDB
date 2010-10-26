@@ -286,6 +286,7 @@ public abstract class Table {
 	 */
 	public void drop() {
 		db.execSQL("DROP TABLE IF EXISTS " + getTableName());
+		createdTables.remove(getTableName());
 	}
 
 	/**
