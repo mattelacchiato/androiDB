@@ -20,10 +20,12 @@ Don't use SQL reserved words as column names! I could quote all column names, bu
 
 ==Subprojects
 See http://github.com/mattelacchiato/androiDBExample for an example.
+
 See http://github.com/mattelacchiato/androiDBTest for tests (depending on androiDBExample).
 
 ==Information
 At http://www.blaulabs.de/2010/09/forschungswoche-androidb/ you can find a german blogpost about this project.
+
 A presentation can be found at http://prezi.com/24kxq2purtmf/androidb/ 
 
 === tags
