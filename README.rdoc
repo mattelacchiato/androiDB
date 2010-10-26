@@ -6,15 +6,15 @@ Fetch the code and import it as Eclipse project. Than include it in your own And
 A user-friendly jar in two versions (dex compiled and sun-java compatible) is planned for the first release.
 
 ==Caution
-Don't use SQL reserved words as column names! I could have quote all column names, but SQLite don't behave like expected:
-	sqlite> CREATE TABLE IF NOT EXISTS Metadata ( '_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 'table' TEXT NOT NULL);
-	sqlite> insert into metadata ('table') values ('fjdksla');
-	sqlite> select * from metadata;
-	1|fjdksla
-	sqlite> select table from metadata;
-	Error: near "table": syntax error
-	sqlite> select 'table' from metadata;
-	table
+Don't use SQL reserved words as column names! I could quote all column names, but SQLite don't behave like expected:
+ sqlite> CREATE TABLE IF NOT EXISTS Metadata ( '_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 'table' TEXT NOT NULL);
+ sqlite> insert into metadata ('table') values ('fjdksla');
+ sqlite> select * from metadata;
+ 1|fjdksla
+ sqlite> select table from metadata;
+ Error: near "table": syntax error
+ sqlite> select 'table' from metadata;
+ table
 
 
 
