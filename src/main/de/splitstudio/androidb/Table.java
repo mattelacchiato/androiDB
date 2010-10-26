@@ -234,8 +234,7 @@ public abstract class Table {
 			}
 			return db.delete(getTableName(), PRIMARY_KEY + EQUAL + _id, null) > 0;
 		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -266,8 +265,7 @@ public abstract class Table {
 			trimLastDelimiter(updateValues);
 			db.execSQL(String.format(SQL_UPDATE, getTableName(), updateValues, _id));
 		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
+			throw new RuntimeException(e);
 		}
 		return true;
 	}
