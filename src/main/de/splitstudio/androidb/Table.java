@@ -122,10 +122,10 @@ public abstract class Table {
 		int newVersion = getVersion();
 		Metadata metaTable = new Metadata(db);
 		if (metaTable.findByName(getTableName())) {
-			onUpgrade(metaTable.getVersion(), newVersion);
+			onUpgrade(metaTable.getTableVersion(), newVersion);
 		} else {
 			metaTable.setTable(getTableName());
-			metaTable.setVersion(newVersion);
+			metaTable.setTableVersion(newVersion);
 			if (!metaTable.save()) {
 				throw new IllegalStateException("Could not create metadata for Table " + getTableName());
 			}
