@@ -114,7 +114,7 @@ public abstract class Table {
 	}
 
 	private void handleUpgrade() {
-		//Metadata is unversioned.
+		//Metadata itself is unversioned.
 		if (getClass().equals(Metadata.class)) {
 			return;
 		}
@@ -253,21 +253,26 @@ public abstract class Table {
 				return false;
 			}
 
-			for (Field field : getFields()) {
-				if (ColumnHelper.isColumn(field) && !isPrimaryKey(field)) {
-					updateValues.append(field.getName());
-					updateValues.append(EQUAL);
-					updateValues.append(getValueQuotedIfNeeded(field));
-					updateValues.append(DELIMITER);
-					updateValues.append(SPACE);
-				}
-			}
+			fieldToValue(updateValues);
 			trimLastDelimiter(updateValues);
 			db.execSQL(String.format(SQL_UPDATE, getTableName(), updateValues, _id));
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 		return true;
+	}
+
+	private StringBuilder fieldToValue(final StringBuilder updateValues) throws IllegalAccessException {
+		for (Field field : getFields()) {
+			if (ColumnHelper.isColumn(field) && !isPrimaryKey(field)) {
+				updateValues.append(field.getName());
+				updateValues.append(EQUAL);
+				updateValues.append(getValueQuotedIfNeeded(field));
+				updateValues.append(DELIMITER);
+				updateValues.append(SPACE);
+			}
+		}
+		return updateValues;
 	}
 
 	/**
@@ -350,7 +355,9 @@ public abstract class Table {
 		List<Field> fields = new ArrayList<Field>();
 		try {
 			fields.add(Table.class.getDeclaredField(PRIMARY_KEY));
-		} catch (Exception e) {}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 		fields.addAll(Arrays.asList(this.getClass().getDeclaredFields()));
 		return fields;
 	}
@@ -386,8 +393,7 @@ public abstract class Table {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
+			throw new RuntimeException(e);
 		}
 
 		return true;
@@ -461,6 +467,15 @@ public abstract class Table {
 		}
 
 		return metaData.version();
+	}
+
+	@Override
+	public String toString() {
+		try {
+			return fieldToValue(new StringBuilder()).toString();
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
