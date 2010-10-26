@@ -425,10 +425,7 @@ public abstract class Table {
 			trimLastDelimiter(sqlColumns);
 			String sql = String.format(SQL_CREATE_TABLE, name, sqlColumns.toString());
 			Log.i(TAG, "Executing sql: " + sql);
-			db.beginTransaction();
 			db.execSQL(sql);
-			db.setTransactionSuccessful();
-			db.endTransaction();
 			createdTables.add(name);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
