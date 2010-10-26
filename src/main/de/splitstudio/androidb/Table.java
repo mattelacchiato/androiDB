@@ -465,4 +465,27 @@ public abstract class Table {
 		return metaData.version();
 	}
 
+	@Override
+	public boolean equals(final Object obj) {
+		if (!(obj instanceof Table)) {
+			return false;
+		}
+		Table other = (Table) obj;
+		List<Field> fields = getFields();
+		if (!Arrays.equals(fields.toArray(), other.getFields().toArray())) {
+			return false;
+		}
+
+		try {
+			for (Field field : fields) {
+				if (!field.get(this).equals(field.get(other))) {
+					return false;
+				}
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return true;
+	}
+
 }
