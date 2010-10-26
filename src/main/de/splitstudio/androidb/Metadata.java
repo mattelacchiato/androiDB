@@ -6,8 +6,6 @@ import de.splitstudio.androidb.annotation.Column;
 
 class Metadata extends Table {
 
-	static final String SQL = "CREATE TABLE IF NOT EXISTS Metadata ( _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, version INTEGER NOT NULL, table TEXT NOT NULL)";
-
 	@Column(notNull = true)
 	private int tableVersion;
 
