@@ -5,6 +5,47 @@ A Lightweight Database Library for Android.
 Fetch the code and import it as Eclipse project. Than include it in your own Android project (Project Properties -> Java Build Path -> Projects -> Add...).
 A user-friendly jar in two versions (dex compiled and sun-java compatible) is planned for the first release.
 
+==Usage
+===Define Table Structure
+Just extend your class from <tt>Table</tt> and set a DB version on it:
+
+ @TableMetaData(version = 1)
+ public class Category extends Table {
+ 
+ 	@Column
+ 	private String name;
+ 
+ 	@Column(notNull = true)
+ 	private int budget;
+ 
+ 	public Category(final Context context) {
+ 		super(context);
+ 	}
+ 	
+ 	//and some getters&setters
+ }
+With the <tt>@Column</tt>-Annotation you define a column in the DB. You don't need to define a Primary Key. 
+This is alreade done by Table's "_id" Column.
+
+===Enjoy
+Now, you can call all CRUD-Method on Category:
+ Table cat = new Category(getContext());
+ cat.setBudget(42);
+ cat.save();
+
+ Table cat = new Category(getContext());
+ cat.find(42);
+ cat.setName("foo");
+ cat.save();
+ 
+ cat.delete();
+
+===Versioning
+When creating a table instance, this table will immidiatly created in the DB (when it's not existing, yet). Afterwards,
+we will look in our Metadata-table to compare the current table version with the new created one. When they differ,
+<tt>onUpgrade(int fromVersion, int toVersion)</tt> will be called. The default behaviour is to drop the current table, but
+you can simply override the method to provide your own upgrade handling.
+
 ==Caution
 Don't use SQL reserved words as column names! I could quote all column names, but SQLite don't behave like expected:
  sqlite> CREATE TABLE IF NOT EXISTS Metadata ( '_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 'table' TEXT NOT NULL);

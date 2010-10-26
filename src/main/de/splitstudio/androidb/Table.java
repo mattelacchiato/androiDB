@@ -72,8 +72,7 @@ public abstract class Table {
 
 	/**
 	 * Welcome! Just provide your context, so we can access the physical database file. We will create or open a new
-	 * database file, which is called entry of your package name. (e.g.: de.splitstudio.killerapp -&gt;
-	 * "killerapp.sqlite").<br/>
+	 * database file, which is called {@link #DB_FILENAME}.<br/>
 	 * At last, it tries to create the table in the database ({@link #createIfNecessary()}), when it can't remember to
 	 * have this done yet (see {@link #createdTables}.
 	 * 
