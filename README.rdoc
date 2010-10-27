@@ -40,6 +40,15 @@ Now, you can call all CRUD-Method on Category:
  
  cat.delete();
 
+===Extend
+Of course, you can extend your Table implementation with your specialized CRUD-Methods:
+ public boolean findByName(final String name) {
+ 	Cursor c = db.query(getTableName(), getColumnNames(), "tableName='" + name + "'", null, null, null, null);
+ 	return fillFirst(c);
+ }
+The super class Table provides all methods you need, like getTableName(), getColumnNames(), fillFirst(c)...
+
+
 ===Versioning
 When creating a table instance, this table will immidiatly created in the DB (when it's not existing, yet). Afterwards,
 we will look in our Metadata-table to compare the current table version with the new created one. When they differ,
