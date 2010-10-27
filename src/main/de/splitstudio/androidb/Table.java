@@ -336,7 +336,7 @@ public abstract class Table {
 		return sb;
 	}
 
-	private List<String> getColumnNamesAsList() {
+	protected List<String> getColumnNamesAsList() {
 		List<String> columns = new ArrayList<String>();
 		for (Field field : getFields()) {
 			if (ColumnHelper.isColumn(field)) {
@@ -346,7 +346,7 @@ public abstract class Table {
 		return columns;
 	}
 
-	String[] getColumnNames() {
+	protected String[] getColumnNames() {
 		List<String> columns = getColumnNamesAsList();
 		return columns.toArray(new String[columns.size()]);
 	}
@@ -355,14 +355,14 @@ public abstract class Table {
 	 * @return All declared fields from the current class plus the {@link #PRIMARY_KEY} field from {@link Table}.
 	 */
 	//TODO: get all fields from superclasses to provide inheritance.
-	List<Field> getFields() {
+	protected List<Field> getFields() {
 		List<Field> fields = new ArrayList<Field>();
 		try {
 			fields.add(Table.class.getDeclaredField(PRIMARY_KEY));
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-		fields.addAll(Arrays.asList(this.getClass().getDeclaredFields()));
+		fields.addAll(Arrays.asList(getClass().getDeclaredFields()));
 		return fields;
 	}
 
