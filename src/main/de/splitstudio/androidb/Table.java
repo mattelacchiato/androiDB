@@ -478,9 +478,14 @@ public abstract class Table {
 		}
 	}
 
+	/**
+	 * A table is equal to another table, when both have the same columns and values in columns.
+	 * 
+	 * @param obj other table to check.
+	 */
 	@Override
 	public boolean equals(final Object obj) {
-		if (!(obj instanceof Table)) {
+		if (!(obj instanceof Table) || getClass() != obj.getClass()) {
 			return false;
 		}
 		Table other = (Table) obj;
