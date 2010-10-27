@@ -371,8 +371,8 @@ public abstract class Table {
 		return _id;
 	}
 
-	final void setId(final Long id) {
-		this._id = id;
+	final void setId(final Long _id) {
+		this._id = _id;
 	}
 
 	/**
@@ -381,7 +381,7 @@ public abstract class Table {
 	 * @param c the cursor containing all column's values.
 	 * @return <code>true</code>, when filling was successful.
 	 */
-	boolean fillFirst(final Cursor c) {
+	protected boolean fillFirst(final Cursor c) {
 		if (!c.moveToFirst()) {
 			return false;
 		}
@@ -395,7 +395,6 @@ public abstract class Table {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-
 		return true;
 	}
 
@@ -406,7 +405,7 @@ public abstract class Table {
 	 * @return <code>true</code>, when it was already created, or it the {@link #SQL_CREATE_TABLE} execution was
 	 *         successful.
 	 */
-	boolean createIfNecessary() {
+	private boolean createIfNecessary() {
 		StringBuilder sqlColumns = new StringBuilder();
 		String name = getTableName();
 
