@@ -60,7 +60,7 @@ public abstract class Table {
 	private static final String EQUAL = "=";
 
 	/** The database. Normally {@link Table} will create its own instance. */
-	protected final SQLiteDatabase db;
+	protected static SQLiteDatabase db = null;
 
 	/** Set to remember, which tables were already created. */
 	static final Set<String> createdTables = new HashSet<String>();
@@ -91,7 +91,8 @@ public abstract class Table {
 	 */
 	public Table(final Context context, final Long _id) {
 		//create or open db. Sorry for this ugly stuff, but Java needs the constructor call as first entry.
-		this(context.openOrCreateDatabase(DB_FILENAME, SQLiteDatabase.CREATE_IF_NECESSARY, null));
+		this(db != null && db.isOpen() ? db : context.openOrCreateDatabase(DB_FILENAME,
+			SQLiteDatabase.CREATE_IF_NECESSARY, null));
 		this._id = _id;
 	}
 
@@ -102,15 +103,9 @@ public abstract class Table {
 	 */
 	/* ...able to test*/
 	Table(final SQLiteDatabase db) {
-		this.db = db;
+		Table.db = db;
 		createIfNecessary();
 		handleUpgrade();
-	}
-
-	@Override
-	protected void finalize() throws Throwable {
-		super.finalize();
-		db.close();
 	}
 
 	private void handleUpgrade() {
@@ -379,8 +374,12 @@ public abstract class Table {
 		this._id = _id;
 	}
 
+	public SQLiteDatabase getDb() {
+		return db;
+	}
+
 	/**
-	 * Fills the first entry the cursor into this object.
+	 * Fills the first entry the cursor into this object. Finally, the cursor gets closed.
 	 * 
 	 * @param c the cursor containing all column's values.
 	 * @return <code>true</code>, when filling was successful.
@@ -398,6 +397,8 @@ public abstract class Table {
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
+		} finally {
+			c.close();
 		}
 		return true;
 	}
@@ -507,6 +508,23 @@ public abstract class Table {
 			throw new RuntimeException(e);
 		}
 		return true;
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		if (db != null && db.isOpen()) {
+			Log.w(TAG, "Finalizing Table object, but DB is still open. Take care to avoid memory leaks!");
+		}
+		super.finalize();
+	}
+
+	/**
+	 * Closes the DB instance. You have to close the DB for your own, it won't get called on {@link #finalize()}!
+	 */
+	public static void closeDB() {
+		if (db != null && db.isOpen()) {
+			db.close();
+		}
 	}
 
 }
