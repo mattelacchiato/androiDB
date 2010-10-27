@@ -288,11 +288,15 @@ public abstract class Table {
 	}
 
 	/**
-	 * DROP TABLE IF EXISTS.
+	 * DROP TABLE IF EXISTS, delete from {@link #createdTables} and from {@link Metadata}.
 	 */
 	public void drop() {
 		db.execSQL("DROP TABLE IF EXISTS " + getTableName());
 		createdTables.remove(getTableName());
+		Metadata metadata = new Metadata(db);
+		if (metadata.findByName(getTableName())) {
+			metadata.delete();
+		}
 	}
 
 	/**
