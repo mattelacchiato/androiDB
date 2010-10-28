@@ -56,6 +56,8 @@ we will look in our Metadata-table to compare the current table version with the
 you can simply override the method to provide your own upgrade handling.
 
 ==Caution
+
+===Table and Column Naming
 Don't use SQL reserved words as column names! I could quote all column names, but SQLite don't behave like expected:
  sqlite> CREATE TABLE IF NOT EXISTS Metadata ( '_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 'table' TEXT NOT NULL);
  sqlite> insert into metadata ('table') values ('fjdksla');
@@ -65,6 +67,10 @@ Don't use SQL reserved words as column names! I could quote all column names, bu
  Error: near "table": syntax error
  sqlite> select 'table' from metadata;
  table
+
+===Cursor and DB instances
+You have to take care of your db and cursor instances. When you don't need them anymore, you have to call explicitly
+close()!
 
 ==Subprojects
 * Example: http://github.com/mattelacchiato/androiDBExample
