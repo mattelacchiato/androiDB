@@ -24,6 +24,7 @@ import java.util.Set;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
@@ -102,7 +103,7 @@ public abstract class Table {
 	 * @param db
 	 */
 	/* ...able to test*/
-	Table(final SQLiteDatabase db) {
+	protected Table(final SQLiteDatabase db) {
 		Table.db = db;
 		createIfNecessary();
 		handleUpgrade();
@@ -197,7 +198,7 @@ public abstract class Table {
 			for (Field field : getFields()) {
 				if (ColumnHelper.isColumn(field)) {
 					columns.append(SPACE).append(field.getName()).append(DELIMITER);
-					values.append(SPACE).append(getValueQuotedIfNeeded(field)).append(DELIMITER);
+					values.append(SPACE).append(getEscapedValueQuotedIfNeeded(field)).append(DELIMITER);
 				}
 			}
 			trimLastDelimiter(columns);
@@ -248,7 +249,7 @@ public abstract class Table {
 				return false;
 			}
 
-			fieldToValue(updateValues);
+			fieldsToUpdateSql(updateValues);
 			trimLastDelimiter(updateValues);
 			db.execSQL(String.format(SQL_UPDATE, getTableName(), updateValues, _id));
 		} catch (Exception e) {
@@ -257,12 +258,12 @@ public abstract class Table {
 		return true;
 	}
 
-	private StringBuilder fieldToValue(final StringBuilder updateValues) throws IllegalAccessException {
+	private StringBuilder fieldsToUpdateSql(final StringBuilder updateValues) throws IllegalAccessException {
 		for (Field field : getFields()) {
 			if (ColumnHelper.isColumn(field) && !isPrimaryKey(field)) {
 				updateValues.append(field.getName());
 				updateValues.append(EQUAL);
-				updateValues.append(getValueQuotedIfNeeded(field));
+				updateValues.append(getEscapedValueQuotedIfNeeded(field));
 				updateValues.append(DELIMITER);
 				updateValues.append(SPACE);
 			}
@@ -295,20 +296,22 @@ public abstract class Table {
 	}
 
 	/**
-	 * Get the quoted value, when it's a String. Otherwise, the retrieved object will returned as it is.
+	 * Get the quoted value, when it's a String. Otherwise, the retrieved object will returned as it is. It will allways
+	 * escape the value!
 	 * 
 	 * @param field you want to access.
 	 * @return the quoted value, when it's a String. Otherwise, the retrieved object will returned as it is.
 	 */
-	private Object getValueQuotedIfNeeded(final Field field) throws IllegalArgumentException, IllegalAccessException {
+	private Object getEscapedValueQuotedIfNeeded(final Field field) throws IllegalArgumentException,
+			IllegalAccessException {
 		field.setAccessible(true);
 		Object value = field.get(this);
-
 		if (value == null) {
-			return value;
+			return null;
 		}
+
 		if (value instanceof String) {
-			return String.format("'%s'", value);
+			return DatabaseUtils.sqlEscapeString((String) value);
 		}
 		return value;
 	}
@@ -476,7 +479,7 @@ public abstract class Table {
 	@Override
 	public String toString() {
 		try {
-			return fieldToValue(new StringBuilder()).toString();
+			return fieldsToUpdateSql(new StringBuilder()).toString();
 		} catch (IllegalAccessException e) {
 			throw new RuntimeException(e);
 		}
