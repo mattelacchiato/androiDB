@@ -224,14 +224,19 @@ public abstract class Table {
 	 * @return <code>true</code> when deletion was successful.
 	 */
 	public boolean delete() {
+		return delete(PRIMARY_KEY + EQUAL + _id);
+	}
+
+	public boolean delete(final String whereClause) {
 		try {
 			if (_id == null) {
 				return false;
 			}
-			return db.delete(getTableName(), PRIMARY_KEY + EQUAL + _id, null) > 0;
+			return db.delete(getTableName(), whereClause, null) > 0;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+
 	}
 
 	/**
