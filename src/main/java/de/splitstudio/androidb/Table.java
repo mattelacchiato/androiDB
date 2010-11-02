@@ -54,6 +54,9 @@ public abstract class Table {
 	/** SQL template for table creation */
 	public static final String SQL_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS %s (%s)";
 
+	/** SQL template for index creation */
+	public static final String SQL_CREATE_INDEX = "CREATE INDEX IF NOT EXISTS index_%s ON %s (%s)";
+
 	private static final String SPACE = " ";
 
 	private static final String DELIMITER = ",";
@@ -413,13 +416,14 @@ public abstract class Table {
 
 	/**
 	 * Executes a {@link #SQL_CREATE_TABLE}, when we can't remember to have this done yet (see {@link #createdTables}.
-	 * Afterwards, this table will be added to {@link #createdTables}.
+	 * Afterwards, this table will be added to {@link #createdTables} and optional indexes will get created.
 	 * 
 	 * @return <code>true</code>, when it was already created, or it the {@link #SQL_CREATE_TABLE} execution was
 	 *         successful.
 	 */
 	private boolean createIfNecessary() {
 		StringBuilder sqlColumns = new StringBuilder();
+		StringBuilder indexColumns = new StringBuilder();
 		String name = getTableName();
 
 		if (createdTables.contains(name)) {
@@ -429,25 +433,39 @@ public abstract class Table {
 		try {
 			for (Field field : getFields()) {
 				if (ColumnHelper.isColumn(field)) {
-					sqlColumns.append(SPACE);
-					sqlColumns.append(field.getName());
-					sqlColumns.append(SPACE);
-					sqlColumns.append(TypeMapper.getSqlType(field.getType()));
-
-					StringBuilder constraints = ColumnHelper.getConstraints(field);
-					if (constraints.length() > 0) {
-						sqlColumns.append(constraints);
-					}
-					sqlColumns.append(DELIMITER);
+					appendCreateColumns(sqlColumns, field);
+					appendIndexColumns(indexColumns, field);
 				}
 			}
 			trimLastDelimiter(sqlColumns);
+			trimLastDelimiter(indexColumns);
+
 			execSQL(String.format(SQL_CREATE_TABLE, name, sqlColumns.toString()));
 			createdTables.add(name);
+			if (indexColumns.length() > 0) {
+				execSQL(String.format(SQL_CREATE_INDEX, name, name, indexColumns.toString()));
+			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 		return true;
+	}
+
+	private void appendIndexColumns(final StringBuilder indexColumns, final Field field) {
+		if (field.getAnnotation(Column.class).index()) {
+			indexColumns.append(field.getName()).append(DELIMITER);
+		}
+	}
+
+	private void appendCreateColumns(final StringBuilder sqlColumns, final Field field) {
+		sqlColumns.append(SPACE).append(field.getName()).append(SPACE);
+		sqlColumns.append(TypeMapper.getSqlType(field.getType()));
+
+		StringBuilder constraints = ColumnHelper.getConstraints(field);
+		if (constraints.length() > 0) {
+			sqlColumns.append(constraints);
+		}
+		sqlColumns.append(DELIMITER);
 	}
 
 	/**
