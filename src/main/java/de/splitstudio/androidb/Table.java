@@ -182,7 +182,7 @@ public abstract class Table {
 			}
 			Cursor cursor = db
 					.query(getTableName(), getColumnNames(), PRIMARY_KEY + EQUAL + id, null, null, null, null);
-			return fillFirst(cursor);
+			return fillFirstAndClose(cursor);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -381,8 +381,9 @@ public abstract class Table {
 		return _id;
 	}
 
-	final void setId(final Long _id) {
+	public final Table setId(final Long _id) {
 		this._id = _id;
+		return this;
 	}
 
 	public SQLiteDatabase getDb() {
@@ -395,22 +396,34 @@ public abstract class Table {
 	 * @param c the cursor containing all column's values.
 	 * @return <code>true</code>, when filling was successful.
 	 */
-	protected boolean fillFirst(final Cursor c) {
+	protected boolean fillFirstAndClose(final Cursor c) {
 		if (!c.moveToFirst()) {
 			return false;
 		}
 
 		try {
+			fill(c);
+		} finally {
+			c.close();
+		}
+		return true;
+	}
+
+	public boolean fill(final Cursor c) {
+		if (c.isAfterLast() || c.isBeforeFirst() && !c.moveToFirst()) {
+			return false;
+		}
+
+		try {
 			for (Field field : getFields()) {
-				if (ColumnHelper.isColumn(field)) {
+				if (c.getColumnIndex(field.getName()) >= 0) {
 					setTypedValue(c, field);
 				}
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
-		} finally {
-			c.close();
 		}
+
 		return true;
 	}
 
@@ -477,6 +490,7 @@ public abstract class Table {
 	 */
 	protected void onUpgrade(final int fromVersion, final int toVersion) {
 		drop();
+		createIfNecessary();
 	}
 
 	private void setTypedValue(final Cursor c, final Field field) throws IllegalArgumentException,
@@ -485,6 +499,11 @@ public abstract class Table {
 		field.set(this, TypeMapper.getTypedValue(c, field));
 	}
 
+	/**
+	 * Get the annotated version of this table.
+	 * 
+	 * @return the annotated version of this table.
+	 */
 	public final int getVersion() {
 		TableMetaData metaData = getClass().getAnnotation(TableMetaData.class);
 		if (metaData == null) {
