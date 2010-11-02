@@ -66,7 +66,7 @@ public abstract class Table {
 	/** Set to remember, which tables were already created. */
 	static final Set<String> createdTables = new HashSet<String>();
 
-	private static final String TAG = Table.class.getSimpleName();
+	protected static final String TAG = Table.class.getSimpleName();
 
 	/** The filename for the database. */
 	public static final String DB_FILENAME = "androidb.sqlite";
@@ -251,7 +251,7 @@ public abstract class Table {
 
 			fieldsToUpdateSql(updateValues);
 			trimLastDelimiter(updateValues);
-			db.execSQL(String.format(SQL_UPDATE, getTableName(), updateValues, _id));
+			execSQL(String.format(SQL_UPDATE, getTableName(), updateValues, _id));
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -287,7 +287,7 @@ public abstract class Table {
 	 * DROP TABLE IF EXISTS, delete from {@link #createdTables} and from {@link Metadata}.
 	 */
 	public void drop() {
-		db.execSQL("DROP TABLE IF EXISTS " + getTableName());
+		execSQL("DROP TABLE IF EXISTS " + getTableName());
 		createdTables.remove(getTableName());
 		Metadata metadata = new Metadata(db);
 		if (metadata.findByName(getTableName())) {
@@ -437,9 +437,7 @@ public abstract class Table {
 				}
 			}
 			trimLastDelimiter(sqlColumns);
-			String sql = String.format(SQL_CREATE_TABLE, name, sqlColumns.toString());
-			Log.i(TAG, "Executing sql: " + sql);
-			db.execSQL(sql);
+			execSQL(String.format(SQL_CREATE_TABLE, name, sqlColumns.toString()));
 			createdTables.add(name);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -474,6 +472,11 @@ public abstract class Table {
 		}
 
 		return metaData.version();
+	}
+
+	private void execSQL(final String sql) {
+		Log.i(TAG, "Executing sql: " + sql);
+		db.execSQL(sql);
 	}
 
 	@Override
@@ -516,7 +519,8 @@ public abstract class Table {
 	@Override
 	protected void finalize() throws Throwable {
 		if (db != null && db.isOpen()) {
-			Log.w(TAG, "Finalizing Table object, but DB is still open. Take care to avoid memory leaks!");
+			Log.w(TAG, String.format(
+				"Finalizing Table object %s, but DB is still open. Take care to avoid memory leaks!", getTableName()));
 		}
 		super.finalize();
 	}
