@@ -40,7 +40,7 @@ public @interface Column {
 
 	int viewId() default -1;
 
-	boolean index() default false;
+	String[] indexNames() default {};
 
 	/**
 	 * Foreign Keys are only available in SQLite 3.6.19, which was first used in Android 2.2 (API-Level 8).

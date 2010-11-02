@@ -18,9 +18,11 @@ package de.splitstudio.androidb;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -55,7 +57,7 @@ public abstract class Table {
 	public static final String SQL_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS %s (%s)";
 
 	/** SQL template for index creation */
-	public static final String SQL_CREATE_INDEX = "CREATE INDEX IF NOT EXISTS index_%s ON %s (%s)";
+	public static final String SQL_CREATE_INDEX = "CREATE INDEX IF NOT EXISTS %s ON %s (%s)";
 
 	private static final String SPACE = " ";
 
@@ -428,45 +430,58 @@ public abstract class Table {
 	}
 
 	/**
-	 * Executes a {@link #SQL_CREATE_TABLE}, when we can't remember to have this done yet (see {@link #createdTables}.
-	 * Afterwards, this table will be added to {@link #createdTables} and optional indexes will get created.
+	 * Create this table and all indices, when we can't remember to have this done yet (see {@link #createdTables}.
+	 * Afterwards, this table will be added to {@link #createdTables}
 	 * 
 	 * @return <code>true</code>, when it was already created, or it the {@link #SQL_CREATE_TABLE} execution was
 	 *         successful.
 	 */
-	private boolean createIfNecessary() {
+	private void createIfNecessary() {
 		StringBuilder sqlColumns = new StringBuilder();
-		StringBuilder indexColumns = new StringBuilder();
 		String name = getTableName();
 
 		if (createdTables.contains(name)) {
-			return true;
+			return;
 		}
 
 		try {
 			for (Field field : getFields()) {
 				if (ColumnHelper.isColumn(field)) {
 					appendCreateColumns(sqlColumns, field);
-					appendIndexColumns(indexColumns, field);
 				}
 			}
 			trimLastDelimiter(sqlColumns);
-			trimLastDelimiter(indexColumns);
 
 			execSQL(String.format(SQL_CREATE_TABLE, name, sqlColumns.toString()));
+			createIndicesIfNecessary();
 			createdTables.add(name);
-			if (indexColumns.length() > 0) {
-				execSQL(String.format(SQL_CREATE_INDEX, name, name, indexColumns.toString()));
-			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-		return true;
 	}
 
-	private void appendIndexColumns(final StringBuilder indexColumns, final Field field) {
-		if (field.getAnnotation(Column.class).index()) {
-			indexColumns.append(field.getName()).append(DELIMITER);
+	private void createIndicesIfNecessary() {
+		HashMap<String, StringBuilder> indices = new HashMap<String, StringBuilder>();
+		//fill map
+		for (Field field : getFields()) {
+			if (ColumnHelper.isColumn(field)) {
+				String[] indexNames = field.getAnnotation(Column.class).indexNames();
+				for (String indexName : indexNames) {
+					if (!indices.containsKey(indexName)) {
+						indices.put(indexName, new StringBuilder());
+					}
+					indices.get(indexName).append(field.getName()).append(DELIMITER);
+				}
+			}
+		}
+
+		//use map
+		for (Entry<String, StringBuilder> index : indices.entrySet()) {
+			String indexName = index.getKey();
+			StringBuilder columns = index.getValue();
+			trimLastDelimiter(columns);
+
+			execSQL(String.format(SQL_CREATE_INDEX, indexName, getTableName(), columns.toString()));
 		}
 	}
 

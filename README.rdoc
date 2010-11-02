@@ -55,6 +55,33 @@ we will look in our Metadata-table to compare the current table version with the
 <tt>onUpgrade(int fromVersion, int toVersion)</tt> will be called. The default behaviour is to drop the current table, but
 you can simply override the method to provide your own upgrade handling.
 
+
+===Columns
+The following types are currently supported:
+* notNull (false)
+  flag for "NOT NULL"-constraint
+* autoIncrement (false)
+  flag for "AUTOINCREMENT"-constraint
+* primaryKey (false)
+  flag for "PRIMARY KEY"-constraint. Though the Table-class holds the primary key for each table, you won't use this.
+* viewId (-1)
+  int value for an Android ressource to bind with this column. It's not interpreted anywhere in androiDB, but you
+  can use this value for your own (probably in your CursorAdapter).
+* indexNames ({})
+  array of index names, which should include this column.
+  *Examples:*
+  * You want to create an index on your columns "firstname" and "lastname". Just add to each column 
+    <tt>@Column ( indexNames = {"idx_name"})
+    firstname
+    @Column ( indexNames = {"idx_name"})
+    lastname</tt>
+  * You want to speed up single searches for firstname, too:
+    <tt>@Column ( indexNames = {"idx_name", "idx_firstname"})
+    firstname
+    @Column ( indexNames = {"idx_name"})
+    lastname</tt>
+====
+
 ==Caution
 
 ===Table and Column Naming
