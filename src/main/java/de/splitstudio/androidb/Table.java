@@ -73,8 +73,11 @@ public abstract class Table {
 
 	protected static final String TAG = Table.class.getSimpleName();
 
+	/** The suffix for db files. */
+	public static final String DB_SUFFIX = ".sqlite";
+
 	/** The filename for the database. */
-	public static final String DB_FILENAME = "androidb.sqlite";
+	public static final String DB_FILENAME = "androidb"+DB_SUFFIX;
 
 	/**
 	 * Welcome! Just provide your context, so we can access the physical database file. We will create or open a new
