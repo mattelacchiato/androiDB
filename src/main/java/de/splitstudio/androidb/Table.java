@@ -15,14 +15,15 @@
  */
 package de.splitstudio.androidb;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -77,7 +78,7 @@ public abstract class Table {
 	public static final String DB_SUFFIX = ".sqlite";
 
 	/** The filename for the database. */
-	public static final String DB_FILENAME = "androidb"+DB_SUFFIX;
+	public static final String DB_FILENAME = "androidb" + DB_SUFFIX;
 
 	/**
 	 * Welcome! Just provide your context, so we can access the physical database file. We will create or open a new
@@ -430,6 +431,39 @@ public abstract class Table {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Fills all entries from the cursor c (beginning with the *next* entry) in an ArrayList with Type T.
+	 * 
+	 * @param <T> Type for all list entries.
+	 * @param klaas Class to instantiate T.
+	 * @param c cursor, has to be moved *before* the first entry.
+	 * @return a filled ArrayList with T instances, filled with all cursor values.
+	 */
+	public static <T extends Table> List<T> fillAll(final Class<T> klaas, final Cursor c) {
+		ArrayList<T> list = new ArrayList<T>();
+		Constructor<T> constructor;
+		try {
+			constructor = klaas.getConstructor(db.getClass());
+			constructor.setAccessible(true);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException("Could not find constructor " + klaas.getName() + "(" + db.getClass() + ")", e);
+		}
+
+		try {
+			while (c.moveToNext()) {
+				T table;
+				table = constructor.newInstance(db);
+				if (table.fill(c)) {
+					list.add(table);
+				}
+			}
+		} catch (Exception e) {
+			throw new RuntimeException("This should not happen. Could not instantiate claas" + klaas, e);
+		}
+		c.close();
+		return list;
 	}
 
 	/**

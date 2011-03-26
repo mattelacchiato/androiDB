@@ -15,55 +15,45 @@
  */
 package de.splitstudio.androidb;
 
-import java.lang.reflect.Field;
+import java.util.List;
 
-import android.content.Context;
-import android.database.Cursor;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CursorAdapter;
-import android.widget.TextView;
-import de.splitstudio.androidb.annotation.Column;
-import de.splitstudio.androidb.annotation.ColumnHelper;
+import android.widget.BaseAdapter;
 
-public class TableAdapter extends CursorAdapter {
+public abstract class TableAdapter<T extends Table> extends BaseAdapter {
 
-	private final Table table;
+	private final List<T> tables;
 
-	private final int viewId;
-
-	public TableAdapter(final Context context, final Cursor cursor, final Table table, final int viewId) {
-		super(context, cursor);
-		this.table = table;
-		this.viewId = viewId;
+	public TableAdapter(final List<T> tables) {
+		this.tables = tables;
 	}
 
-	@Override
-	public void bindView(final View view, final Context context, final Cursor cursor) {
-		for (Field field : table.getFields()) {
-			field.setAccessible(true);
-			if (ColumnHelper.isColumn(field)) {
-				Column column = field.getAnnotation(Column.class);
-				if (column != null && column.viewId() >= 0) {
-					try {
-						String value = TypeMapper.getValueAsString(cursor, field);
-						TextView textView = (TextView) view.findViewById(column.viewId());
-						textView.setText(value);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
+	public int getCount() {
+		return tables.size();
+	}
+
+	public T getItem(final int index) {
+		return tables.get(index);
+	}
+
+	public long getItemId(final int index) {
+		return getItem(index).getId();
+	}
+
+	public View getView(final int position, final View convertView, final ViewGroup parent) {
+		View v;
+		if (convertView == null) {
+			v = newView(tables, parent);
+		} else {
+			v = convertView;
 		}
-	}
-
-	@Override
-	public View newView(final Context context, final Cursor cursor, final ViewGroup parent) {
-		final LayoutInflater inflater = LayoutInflater.from(context);
-		View v = inflater.inflate(viewId, parent, false);
-		bindView(v, context, cursor);
+		bindView(v, tables);
 		return v;
 	}
+
+	public abstract void bindView(final View v, final List<T> tables);
+
+	public abstract View newView(final List<T> tables, final ViewGroup parent);
 
 }
