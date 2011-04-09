@@ -111,7 +111,6 @@ public abstract class Table {
 	 * 
 	 * @param db
 	 */
-	/* ...able to test*/
 	protected Table(final SQLiteDatabase db) {
 		Table.db = db;
 		createIfNecessary();
@@ -453,8 +452,7 @@ public abstract class Table {
 
 		try {
 			while (c.moveToNext()) {
-				T table;
-				table = constructor.newInstance(db);
+				T table = constructor.newInstance(db);
 				if (table.fill(c)) {
 					list.add(table);
 				}
