@@ -17,6 +17,7 @@ package de.splitstudio.androidb;
 
 import java.util.List;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,9 +29,10 @@ public abstract class TableAdapter<T extends Table> extends BaseAdapter {
 
 	private final int layout_id;
 
-	public TableAdapter(final List<T> tables, final int layout_id) {
+	public TableAdapter(final List<T> tables, final Context context, final int layout_id) {
 		this.tables = tables;
 		this.layout_id = layout_id;
+		Table.openOrCreateDB(context);
 	}
 
 	public int getCount() {

@@ -88,8 +88,8 @@ public abstract class Table {
 	 * 
 	 * @param context the context to provide your packagename and path to your app folder on the device.
 	 */
-	public Table(final Context context) {
-		this(context, null);
+	public Table() {
+		this(null);
 	}
 
 	/**
@@ -99,22 +99,18 @@ public abstract class Table {
 	 * @param context the context to provide your packagename and path to your app folder on the device.
 	 * @param _id the primary key. You should be careful to set the correct id!
 	 */
-	public Table(final Context context, final Long _id) {
+	public Table(final Long _id) {
 		//create or open db. Sorry for this ugly stuff, but Java needs the constructor call as first entry.
-		this(db != null && db.isOpen() ? db : context.openOrCreateDatabase(DB_FILENAME,
-			SQLiteDatabase.CREATE_IF_NECESSARY, null));
 		this._id = _id;
-	}
-
-	/**
-	 * Constructor for easier testing.
-	 * 
-	 * @param db
-	 */
-	protected Table(final SQLiteDatabase db) {
-		Table.db = db;
 		createIfNecessary();
 		handleUpgrade();
+	}
+
+	public static SQLiteDatabase openOrCreateDB(final Context context) {
+		if (db == null || !db.isOpen()) {
+			db = context.openOrCreateDatabase(DB_FILENAME, SQLiteDatabase.CREATE_IF_NECESSARY, null);
+		}
+		return db;
 	}
 
 	private void handleUpgrade() {
@@ -124,7 +120,7 @@ public abstract class Table {
 		}
 
 		int newVersion = getVersion();
-		Metadata metaTable = new Metadata(db);
+		Metadata metaTable = new Metadata();
 		if (metaTable.findByName(getTableName())) {
 			int oldVersion = metaTable.getTableVersion();
 			if (oldVersion != newVersion) {
@@ -158,7 +154,7 @@ public abstract class Table {
 	 * @return the table name.
 	 */
 	public final String getTableName() {
-		return this.getClass().getSimpleName();
+		return getClass().getSimpleName();
 	}
 
 	/**
@@ -194,7 +190,8 @@ public abstract class Table {
 	}
 
 	/**
-	 * Create a new row in the table and insert all values from this object.
+	 * Create a new row in the table and insert all values from this object. In most cases you want to call
+	 * {@link #save()} instead...
 	 * 
 	 * @return <code>true</code> when we could save it successfully in the db.
 	 */
@@ -302,7 +299,7 @@ public abstract class Table {
 	public void drop() {
 		execSQL("DROP TABLE IF EXISTS " + getTableName());
 		createdTables.remove(getTableName());
-		Metadata metadata = new Metadata(db);
+		Metadata metadata = new Metadata();
 		if (metadata.findByName(getTableName())) {
 			metadata.delete();
 		}
@@ -444,21 +441,21 @@ public abstract class Table {
 		ArrayList<T> list = new ArrayList<T>();
 		Constructor<T> constructor;
 		try {
-			constructor = klaas.getConstructor(db.getClass());
+			constructor = klaas.getConstructor();
 			constructor.setAccessible(true);
 		} catch (NoSuchMethodException e) {
-			throw new RuntimeException("Could not find constructor " + klaas.getName() + "(" + db.getClass() + ")", e);
+			throw new RuntimeException("Could not find constructor " + klaas.getName() + "()", e);
 		}
 
 		try {
 			while (c.moveToNext()) {
-				T table = constructor.newInstance(db);
+				T table = constructor.newInstance();
 				if (table.fill(c)) {
 					list.add(table);
 				}
 			}
 		} catch (Exception e) {
-			throw new RuntimeException("This should not happen. Could not instantiate claas" + klaas, e);
+			throw new RuntimeException("This should not happen. Could not instantiate claas " + klaas, e);
 		}
 		c.close();
 		return list;
@@ -532,8 +529,9 @@ public abstract class Table {
 	}
 
 	/**
-	 * You have to overwrite this method to fullfill your own upgrade handling. This method simply calls {@link #drop()}
-	 * . Maybe you want to handle quirks upgrades (when toVersion &lt; fromVersion)...
+	 * You have to overwrite this method to fulfill your own upgrade handling. This method simply calls {@link #drop()}
+	 * . Maybe you want to handle quirks upgrades (when toVersion &lt; fromVersion). Then default behavior is drop and
+	 * create.
 	 * 
 	 * @param fromVersion Version of this table in DB.
 	 * @param toVersion Version of this table in current annotation {@link TableMetaData}.
@@ -611,8 +609,11 @@ public abstract class Table {
 	@Override
 	protected void finalize() throws Throwable {
 		if (db != null && db.isOpen()) {
-			Log.w(TAG, String.format(
-				"Finalizing Table object %s, but DB is still open. Take care to avoid memory leaks!", getTableName()));
+			Log.w(
+				TAG,
+				String.format(
+					"Finalizing Table object %s, but DB is still open. This is no problem until you call closeDB() for your own. Take care to avoid memory leaks!",
+					getTableName()));
 		}
 		super.finalize();
 	}

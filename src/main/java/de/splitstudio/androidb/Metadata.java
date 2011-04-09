@@ -16,7 +16,6 @@
 package de.splitstudio.androidb;
 
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import de.splitstudio.androidb.annotation.Column;
 
 class Metadata extends Table {
@@ -26,10 +25,6 @@ class Metadata extends Table {
 
 	@Column(notNull = true)
 	private String tableName;
-
-	public Metadata(final SQLiteDatabase db) {
-		super(db);
-	}
 
 	public boolean findByName(final String name) {
 		Cursor c = db.query(getTableName(), getColumnNames(), "tableName='" + name + "'", null, null, null, null);
