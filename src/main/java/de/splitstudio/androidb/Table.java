@@ -627,4 +627,8 @@ public abstract class Table {
 		}
 	}
 
+	public static void setDb(final SQLiteDatabase newDB) {
+		db = newDB;
+	}
+
 }
