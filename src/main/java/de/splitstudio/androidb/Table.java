@@ -34,6 +34,7 @@ import android.util.Log;
 import de.splitstudio.androidb.annotation.Column;
 import de.splitstudio.androidb.annotation.ColumnHelper;
 import de.splitstudio.androidb.annotation.TableMetaData;
+import de.splitstudio.androidb.util.ReflectionHelper;
 
 /**
  * {@link Table} is the superclass for your database objects. It provides all CRUD Methods {@link #save()},
@@ -109,6 +110,7 @@ public abstract class Table {
 	public static SQLiteDatabase openOrCreateDB(final Context context) {
 		if (db == null || !db.isOpen()) {
 			db = context.openOrCreateDatabase(DB_FILENAME, SQLiteDatabase.CREATE_IF_NECESSARY, null);
+			createdTables.clear();
 		}
 		return db;
 	}
@@ -238,19 +240,27 @@ public abstract class Table {
 	 * @return <code>true</code> when deletion was successful.
 	 */
 	public boolean delete() {
+		if (_id == null) {
+			return false;
+		}
 		return delete(PRIMARY_KEY + EQUAL + _id);
 	}
 
 	public boolean delete(final String whereClause) {
+		return delete(getTableName(), whereClause);
+	}
+
+	public static boolean delete(final String tableName, final String whereClause) {
 		try {
-			if (_id == null) {
-				return false;
-			}
-			return db.delete(getTableName(), whereClause, null) > 0;
+			return db.delete(tableName, whereClause, null) > 0;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
 
+	public static <T extends Table> boolean delete(final Class<T> klaas, final long id) {
+		T table = ReflectionHelper.createInstance(klaas);
+		return table.find(id) && table.delete();
 	}
 
 	/**
@@ -355,7 +365,7 @@ public abstract class Table {
 
 	protected static List<String> getColumnNamesAsList(final Class<? extends Table> klaas) {
 		List<String> columns = new ArrayList<String>();
-		for (Field field : getFields(klaas)) {
+		for (Field field : ReflectionHelper.getFields(klaas)) {
 			if (ColumnHelper.isColumn(field)) {
 				columns.add(field.getName());
 			}
@@ -373,25 +383,10 @@ public abstract class Table {
 	}
 
 	/**
-	 * @see #getFields(Class)
+	 * @see ReflectionHelper#getFields(Class)
 	 */
 	protected List<Field> getFields() {
-		return getFields(getClass());
-	}
-
-	/**
-	 * @return All declared fields from the current class plus the {@link #PRIMARY_KEY} field from {@link Table}.
-	 */
-	//TODO: get all fields from superclasses to provide inheritance.
-	protected static List<Field> getFields(final Class<? extends Table> klaas) {
-		List<Field> fields = new ArrayList<Field>();
-		try {
-			fields.add(Table.class.getDeclaredField(PRIMARY_KEY));
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-		fields.addAll(Arrays.asList(klaas.getDeclaredFields()));
-		return fields;
+		return ReflectionHelper.getFields(getClass());
 	}
 
 	/**
@@ -459,26 +454,29 @@ public abstract class Table {
 	 */
 	public static <T extends Table> List<T> fillAll(final Class<T> klaas, final Cursor c) {
 		ArrayList<T> list = new ArrayList<T>();
-		Constructor<T> constructor;
-		try {
-			constructor = klaas.getConstructor();
-			constructor.setAccessible(true);
-		} catch (NoSuchMethodException e) {
-			throw new RuntimeException("Could not find constructor " + klaas.getName() + "()", e);
-		}
+		Constructor<T> constructor = ReflectionHelper.getConstructor(klaas);
 
 		try {
 			while (c.moveToNext()) {
 				T table = constructor.newInstance();
 				if (table.fill(c)) {
 					list.add(table);
+				} else {
+					Log.w(TAG, "Could not fill table " + klaas + " with cursor " + c);
 				}
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("This should not happen. Could not instantiate claas " + klaas, e);
+		} finally {
+			c.close();
 		}
-		c.close();
 		return list;
+	}
+
+	public static <T extends Table> T find(final Class<T> klaas, final long id) {
+		T table = ReflectionHelper.createInstance(klaas);
+		table.find(id);
+		return table;
 	}
 
 	/**
@@ -645,9 +643,11 @@ public abstract class Table {
 		if (db != null && db.isOpen()) {
 			db.close();
 		}
+		createdTables.clear();
 	}
 
 	public static void setDb(final SQLiteDatabase newDB) {
+		db.close();
 		db = newDB;
 	}
 
