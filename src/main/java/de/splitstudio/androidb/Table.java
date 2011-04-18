@@ -68,7 +68,7 @@ public abstract class Table {
 	private static final String EQUAL = "=";
 
 	/** The database. Normally {@link Table} will create its own instance. */
-	protected static SQLiteDatabase db = null;
+	private static SQLiteDatabase db = null;
 
 	/** Set to remember, which tables were already created. */
 	static final Set<String> createdTables = new HashSet<String>();
@@ -403,7 +403,7 @@ public abstract class Table {
 		return this;
 	}
 
-	public SQLiteDatabase getDb() {
+	public static SQLiteDatabase getDb() {
 		return db;
 	}
 
@@ -583,7 +583,7 @@ public abstract class Table {
 	}
 
 	private void execSQL(final String sql) {
-		Log.i(TAG, "Executing sql: " + sql);
+		Log.i(TAG, String.format("Executing sql (%s): %s", db.getPath(), sql));
 		db.execSQL(sql);
 	}
 
@@ -647,7 +647,7 @@ public abstract class Table {
 	}
 
 	public static void setDb(final SQLiteDatabase newDB) {
-		db.close();
+		closeDB();
 		db = newDB;
 	}
 

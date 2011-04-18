@@ -1,5 +1,5 @@
 /*
- *    Copyright 2010, Matthias Brandt
+ *    Copyright 2011, Matthias Brandt
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -26,8 +26,12 @@ class Metadata extends Table {
 	@Column(notNull = true)
 	private String tableName;
 
+	public Metadata() {
+		super();
+	}
+
 	public boolean findByName(final String name) {
-		Cursor c = db.query(getTableName(), getColumnNames(), "tableName='" + name + "'", null, null, null, null);
+		Cursor c = getDb().query(getTableName(), getColumnNames(), "tableName='" + name + "'", null, null, null, null);
 		return fillFirstAndClose(c);
 	}
 
