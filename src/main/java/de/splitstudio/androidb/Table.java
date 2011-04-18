@@ -154,7 +154,16 @@ public abstract class Table {
 	 * @return the table name.
 	 */
 	public final String getTableName() {
-		return getClass().getSimpleName();
+		return getTableName(getClass());
+	}
+
+	/**
+	 * Retrieves the table name. It's always the simple name of your implementing class.
+	 * 
+	 * @return the table name.
+	 */
+	public final static String getTableName(final Class<? extends Table> klaas) {
+		return klaas.getSimpleName();
 	}
 
 	/**
@@ -344,9 +353,9 @@ public abstract class Table {
 		return sb;
 	}
 
-	protected List<String> getColumnNamesAsList() {
+	protected static List<String> getColumnNamesAsList(final Class<? extends Table> klaas) {
 		List<String> columns = new ArrayList<String>();
-		for (Field field : getFields()) {
+		for (Field field : getFields(klaas)) {
 			if (ColumnHelper.isColumn(field)) {
 				columns.add(field.getName());
 			}
@@ -355,22 +364,33 @@ public abstract class Table {
 	}
 
 	protected String[] getColumnNames() {
-		List<String> columns = getColumnNamesAsList();
+		return getColumnNames(getClass());
+	}
+
+	protected static String[] getColumnNames(final Class<? extends Table> klaas) {
+		List<String> columns = getColumnNamesAsList(klaas);
 		return columns.toArray(new String[columns.size()]);
+	}
+
+	/**
+	 * @see #getFields(Class)
+	 */
+	protected List<Field> getFields() {
+		return getFields(getClass());
 	}
 
 	/**
 	 * @return All declared fields from the current class plus the {@link #PRIMARY_KEY} field from {@link Table}.
 	 */
 	//TODO: get all fields from superclasses to provide inheritance.
-	protected List<Field> getFields() {
+	protected static List<Field> getFields(final Class<? extends Table> klaas) {
 		List<Field> fields = new ArrayList<Field>();
 		try {
 			fields.add(Table.class.getDeclaredField(PRIMARY_KEY));
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-		fields.addAll(Arrays.asList(getClass().getDeclaredFields()));
+		fields.addAll(Arrays.asList(klaas.getDeclaredFields()));
 		return fields;
 	}
 
