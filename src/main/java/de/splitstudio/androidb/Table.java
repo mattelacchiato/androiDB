@@ -15,6 +15,7 @@
  */
 package de.splitstudio.androidb;
 
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -44,7 +45,9 @@ import de.splitstudio.androidb.util.ReflectionHelper;
  * @author Matthias Brandt
  * @since 2010
  */
-public abstract class Table {
+public abstract class Table implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	/** String represantation of the primary key. Don't define a field with the same name! */
 	public static final String PRIMARY_KEY = "_id";
@@ -175,6 +178,16 @@ public abstract class Table {
 	 */
 	public Cursor all() {
 		return db.query(getTableName(), getColumnNames(), null, null, null, null, null);
+	}
+
+	/**
+	 * Queries over all rows of this Table.
+	 * 
+	 * @return the Cursor of this db operation. When no rows were selected, the cursor is empty.
+	 */
+	public static <T extends Table> List<T> all(final Class<T> klaas) {
+		Cursor c = db.query(getTableName(klaas), getColumnNames(klaas), null, null, null, null, null);
+		return fillAll(klaas, c);
 	}
 
 	/**
@@ -450,7 +463,8 @@ public abstract class Table {
 	 * @param <T> Type for all list entries.
 	 * @param klaas Class to instantiate T.
 	 * @param c cursor, has to be moved *before* the first entry.
-	 * @return a filled ArrayList with T instances, filled with all cursor values.
+	 * @return a filled ArrayList with T instances, filled with all cursor values. The cursor will get closed by this
+	 *         method.
 	 */
 	public static <T extends Table> List<T> fillAll(final Class<T> klaas, final Cursor c) {
 		ArrayList<T> list = new ArrayList<T>();
