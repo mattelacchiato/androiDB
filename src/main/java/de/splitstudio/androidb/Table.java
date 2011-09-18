@@ -81,6 +81,9 @@ public abstract class Table implements Serializable {
 	/** The suffix for db files. */
 	public static final String DB_SUFFIX = ".sqlite";
 
+	/** The suffix for db files. */
+	public static final String DB_BINARY_SUFFIX = ".bin";
+
 	/** The filename for the database. */
 	public static final String DB_FILENAME = "androidb" + DB_SUFFIX;
 
@@ -220,6 +223,7 @@ public abstract class Table implements Serializable {
 	 * @return <code>true</code> when we could save it successfully in the db.
 	 */
 	public boolean insert() {
+		createIfNecessary();
 		StringBuilder columns = new StringBuilder();
 		StringBuilder values = new StringBuilder();
 
@@ -236,6 +240,9 @@ public abstract class Table implements Serializable {
 			Log.i(TAG, "Execute insert: " + sql);
 			SQLiteStatement statement = db.compileStatement(sql);
 			Long id = statement.executeInsert();
+			if (_id != null) {
+				return true;
+			}
 			if (id >= 0L) {
 				_id = id;
 				return true;
@@ -243,7 +250,6 @@ public abstract class Table implements Serializable {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-
 		return false;
 	}
 
@@ -660,9 +666,8 @@ public abstract class Table implements Serializable {
 		createdTables.clear();
 	}
 
-	public static void setDb(final SQLiteDatabase newDB) {
+	public static void setDb(final SQLiteDatabase newDb) {
 		closeDB();
-		db = newDB;
+		db = newDb;
 	}
-
 }
