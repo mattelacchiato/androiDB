@@ -20,6 +20,8 @@ import de.splitstudio.androidb.annotation.Column;
 
 class Metadata extends Table {
 
+	private static final long serialVersionUID = 1L;
+
 	@Column(notNull = true)
 	private int tableVersion;
 

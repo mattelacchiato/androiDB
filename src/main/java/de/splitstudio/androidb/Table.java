@@ -206,6 +206,7 @@ public abstract class Table implements Serializable {
 	public boolean find(final Long id) {
 		try {
 			if (id == null || id < 1L) {
+				Log.e(TAG, "Could not load an primary key < 1!");
 				return false;
 			}
 			Cursor cursor = db
