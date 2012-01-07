@@ -131,9 +131,10 @@ public abstract class Table implements Serializable {
 		Metadata metaTable = new Metadata();
 		if (metaTable.findByName(getTableName())) {
 			int oldVersion = metaTable.getTableVersion();
-			if (oldVersion != newVersion) {
-				onUpgrade(oldVersion, newVersion);
+			if (oldVersion == newVersion) {
+				return;
 			}
+			onUpgrade(oldVersion, newVersion);
 		} else {
 			metaTable.setTable(getTableName());
 		}
@@ -241,6 +242,7 @@ public abstract class Table implements Serializable {
 			Log.i(TAG, "Execute insert: " + sql);
 			SQLiteStatement statement = db.compileStatement(sql);
 			Long id = statement.executeInsert();
+			statement.close();
 			if (_id != null) {
 				return true;
 			}
