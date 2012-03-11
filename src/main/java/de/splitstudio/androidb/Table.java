@@ -436,11 +436,10 @@ public abstract class Table implements Serializable {
 	 * @return <code>true</code>, when filling was successful.
 	 */
 	protected boolean fillFirstAndClose(final Cursor c) {
-		if (!c.moveToFirst()) {
-			return false;
-		}
-
 		try {
+			if (!c.moveToFirst()) {
+				return false;
+			}
 			fill(c);
 		} finally {
 			c.close();
@@ -476,10 +475,10 @@ public abstract class Table implements Serializable {
 	 *         method.
 	 */
 	public static <T extends Table> List<T> fillAll(final Class<T> klaas, final Cursor c) {
-		ArrayList<T> list = new ArrayList<T>();
-		Constructor<T> constructor = ReflectionHelper.getConstructor(klaas);
-
 		try {
+			ArrayList<T> list = new ArrayList<T>();
+			Constructor<T> constructor = ReflectionHelper.getConstructor(klaas);
+
 			while (c.moveToNext()) {
 				T table = constructor.newInstance();
 				if (table.fill(c)) {
@@ -488,12 +487,12 @@ public abstract class Table implements Serializable {
 					Log.w(TAG, "Could not fill table " + klaas + " with cursor " + c);
 				}
 			}
+			return list;
 		} catch (Exception e) {
 			throw new RuntimeException("This should not happen. Could not instantiate claas " + klaas, e);
 		} finally {
 			c.close();
 		}
-		return list;
 	}
 
 	public static <T extends Table> T find(final Class<T> klaas, final long id) {
@@ -647,17 +646,17 @@ public abstract class Table implements Serializable {
 		return true;
 	}
 
-	@Override
-	protected void finalize() throws Throwable {
-		if (db != null && db.isOpen()) {
-			Log.w(
-				TAG,
-				String.format(
-					"Finalizing Table object %s, but DB is still open. This is no problem until you call closeDB() for your own. Take care to avoid memory leaks!",
-					getTableName()));
-		}
-		super.finalize();
-	}
+//	@Override
+//	protected void finalize() throws Throwable {
+//		if (db != null && db.isOpen()) {
+//			Log.w(
+//				TAG,
+//				String.format(
+//					"Finalizing Table object %s, but DB is still open. This is no problem until you call closeDB() for your own. Take care to avoid memory leaks!",
+//					getTableName()));
+//		}
+//		super.finalize();
+//	}
 
 	/**
 	 * Closes the DB instance. You have to close the DB for your own, it won't get called on {@link #finalize()}!
