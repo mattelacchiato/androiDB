@@ -15,8 +15,21 @@
  */
 package de.splitstudio.androidb;
 
+import static de.splitstudio.androidb.SqlType.BLOB;
+import static de.splitstudio.androidb.SqlType.INTEGER;
+import static de.splitstudio.androidb.SqlType.NULL;
+import static de.splitstudio.androidb.SqlType.REAL;
+import static de.splitstudio.androidb.SqlType.TEXT;
+import static java.lang.String.valueOf;
+import static java.util.Arrays.asList;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import android.database.Cursor;
 
@@ -26,33 +39,39 @@ import android.database.Cursor;
  * @author Matthias Brandt
  * @since 2010
  */
+@SuppressWarnings("unchecked")
 public class TypeMapper {
 
-	public static final String BLOB = "BLOB";
+	private static Map<SqlType, Set<Class<?>>> typeMap = new HashMap<SqlType, Set<Class<?>>>();
+	static {
+		//@formatter:off
+		typeMap.put(INTEGER, new HashSet<Class<?>>(asList(
+			Long.class, 
+			long.class, 
+			Integer.class, 
+			int.class,
+			Short.class, 
+			short.class, 
+			byte.class)));
+		typeMap.put(REAL, new HashSet<Class<?>>(asList(
+			Float.class, 
+			float.class, 
+			Double.class, 
+			double.class)));
+		typeMap.put(TEXT, new HashSet<Class<?>>(asList(
+			String.class)));
+		//@formatter:on
+	}
 
-	public static final String TEXT = "TEXT";
-
-	public static final String REAL = "REAL";
-
-	public static final String INTEGER = "INTEGER";
-
-	public static final String NULL = "NULL";
-
-	public static String getSqlType(final Class<?> type) {
+	public static SqlType getSqlType(final Class<?> type) {
 		if (type == null) {
 			return NULL;
 		}
-		if (type.equals(Long.class) || type.equals(Integer.class) || type.equals(Short.class)
-				|| type.equals(Byte.class) || type.equals(Long.class) || type.equals(int.class)
-				|| type.equals(short.class) || type.equals(byte.class) || type.equals(long.class)) {
-			return INTEGER;
-		}
-		if (type.equals(Float.class) || type.equals(Double.class) || type.equals(float.class)
-				|| type.equals(double.class)) {
-			return REAL;
-		}
-		if (type.equals(String.class)) {
-			return TEXT;
+
+		for (Entry<SqlType, Set<Class<?>>> entry : typeMap.entrySet()) {
+			if (entry.getValue().contains(type)) {
+				return entry.getKey();
+			}
 		}
 
 		return BLOB;
@@ -62,21 +81,21 @@ public class TypeMapper {
 		int index = cursor.getColumnIndex(field.getName());
 		Type type = field.getType();
 		if (type.equals(long.class) || type.equals(Long.class)) {
-			return String.valueOf(cursor.getLong(index));
+			return valueOf(cursor.getLong(index));
 		} else if (type.equals(int.class) || type.equals(Integer.class)) {
-			return String.valueOf(cursor.getInt(index));
+			return valueOf(cursor.getInt(index));
 		} else if (type.equals(short.class) || type.equals(Short.class)) {
-			return String.valueOf(cursor.getShort(index));
+			return valueOf(cursor.getShort(index));
 		} else if (type.equals(byte.class) || type.equals(Byte.class)) {
-			return String.valueOf((byte) cursor.getShort(index));
+			return valueOf((byte) cursor.getShort(index));
 		} else if (type.equals(double.class) || type.equals(Double.class)) {
-			return String.valueOf(cursor.getDouble(index));
+			return valueOf(cursor.getDouble(index));
 		} else if (type.equals(float.class) || type.equals(Float.class)) {
-			return String.valueOf(cursor.getFloat(index));
+			return valueOf(cursor.getFloat(index));
 		} else if (type.equals(char.class)) {
-			return String.valueOf((char) cursor.getShort(index));
+			return valueOf((char) cursor.getShort(index));
 		} else if (type.equals(String.class)) {
-			return String.valueOf(cursor.getString(index));
+			return valueOf(cursor.getString(index));
 		}
 		return "";
 	}

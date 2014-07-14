@@ -115,7 +115,8 @@ public abstract class Table implements Serializable {
 
 	public static SQLiteDatabase openOrCreateDB(final Context context) {
 		if (db == null || !db.isOpen()) {
-			db = context.openOrCreateDatabase(DB_FILENAME, SQLiteDatabase.CREATE_IF_NECESSARY, null);
+			db = context
+					.openOrCreateDatabase(DB_FILENAME, SQLiteDatabase.CREATE_IF_NECESSARY, null);
 			createdTables.clear();
 		}
 		return db;
@@ -190,7 +191,8 @@ public abstract class Table implements Serializable {
 	 * @return the Cursor of this db operation. When no rows were selected, the cursor is empty.
 	 */
 	public static <T extends Table> List<T> all(final Class<T> klaas) {
-		Cursor c = db.query(getTableName(klaas), getColumnNames(klaas), null, null, null, null, null);
+		Cursor c = db.query(getTableName(klaas), getColumnNames(klaas), null, null, null, null,
+			null);
 		return fillAll(klaas, c);
 	}
 
@@ -210,8 +212,8 @@ public abstract class Table implements Serializable {
 				Log.e(TAG, "Could not load an primary key < 1!");
 				return false;
 			}
-			Cursor cursor = db
-					.query(getTableName(), getColumnNames(), PRIMARY_KEY + EQUAL + id, null, null, null, null);
+			Cursor cursor = db.query(getTableName(), getColumnNames(), PRIMARY_KEY + EQUAL + id,
+				null, null, null, null);
 			return fillFirstAndClose(cursor);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -233,7 +235,8 @@ public abstract class Table implements Serializable {
 			for (Field field : getFields()) {
 				if (ColumnHelper.isColumn(field)) {
 					columns.append(SPACE).append(field.getName()).append(DELIMITER);
-					values.append(SPACE).append(getEscapedValueQuotedIfNeeded(field)).append(DELIMITER);
+					values.append(SPACE).append(getEscapedValueQuotedIfNeeded(field))
+					.append(DELIMITER);
 				}
 			}
 			trimLastDelimiter(columns);
@@ -309,7 +312,8 @@ public abstract class Table implements Serializable {
 		return true;
 	}
 
-	private StringBuilder fieldsToUpdateSql(final StringBuilder updateValues) throws IllegalAccessException {
+	private StringBuilder fieldsToUpdateSql(final StringBuilder updateValues)
+			throws IllegalAccessException {
 		for (Field field : getFields()) {
 			if (ColumnHelper.isColumn(field) && !isPrimaryKey(field)) {
 				updateValues.append(field.getName());
@@ -353,8 +357,8 @@ public abstract class Table implements Serializable {
 	 * @param field you want to access.
 	 * @return the quoted value, when it's a String. Otherwise, the retrieved object will returned as it is.
 	 */
-	private Object getEscapedValueQuotedIfNeeded(final Field field) throws IllegalArgumentException,
-			IllegalAccessException {
+	private Object getEscapedValueQuotedIfNeeded(final Field field)
+			throws IllegalArgumentException, IllegalAccessException {
 		field.setAccessible(true);
 		Object value = field.get(this);
 		if (value == null) {
@@ -489,7 +493,8 @@ public abstract class Table implements Serializable {
 			}
 			return list;
 		} catch (Exception e) {
-			throw new RuntimeException("This should not happen. Could not instantiate claas " + klaas, e);
+			throw new RuntimeException("This should not happen. Could not instantiate claas "
+					+ klaas, e);
 		} finally {
 			c.close();
 		}
@@ -595,10 +600,12 @@ public abstract class Table implements Serializable {
 	public final int getVersion() {
 		TableMetaData metaData = getClass().getAnnotation(TableMetaData.class);
 		if (metaData == null) {
-			throw new IllegalStateException("Table " + getTableName() + " has to declare a version!");
+			throw new IllegalStateException("Table " + getTableName()
+				+ " has to declare a version!");
 		}
 		if (metaData.version() < 1) {
-			throw new IllegalStateException("Tableversion of " + getTableName() + " has to be >=1 !");
+			throw new IllegalStateException("Tableversion of " + getTableName()
+				+ " has to be >=1 !");
 		}
 
 		return metaData.version();

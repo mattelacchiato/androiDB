@@ -33,8 +33,9 @@ class Metadata extends Table {
 	}
 
 	public boolean findByName(final String name) {
-		Cursor c = getDb().query(getTableName(), getColumnNames(), "tableName='" + name + "'", null, null, null, null);
-		return fillFirstAndClose(c);
+		String selection = "tableName='" + name + "'";
+		Cursor cursor = getDb().query(getTableName(), getColumnNames(), selection, null, null, null, null);
+		return fillFirstAndClose(cursor);
 	}
 
 	public void setVersion(final int version) {
